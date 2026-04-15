@@ -1250,14 +1250,21 @@ ${context.join("\n\n")}
 
 Create a briefing covering:
 
-1. What's on today — events, viewings, plans, appointments from today's notes
+1. What's on today — events, viewings, plans, appointments. Include times.
 2. Charlotte / Meep — anything involving her today or this week, things to remember
 3. Active projects — quick status on house hunt, wedding, trips, anything else active
 4. Things to remember — upcoming birthdays, deadlines, stuff that's easy to forget
-5. People check-in — anyone you haven't heard from in a while, pending responses
+5. Open requests — things people asked Niko to do that DON'T have a specific time attached (like "pick up milk"). Only include if they're from the last 2 days and haven't been marked done. If it's been more than 2 days, drop it.
 6. Heads up — anything coming up in the next few days you should be aware of
 
-Keep it casual and brief. If there's nothing for a section, skip it. Don't make stuff up — only report what's actually in the notes. If the vault is mostly empty, say so and suggest things Niko could start tracking.`;
+IMPORTANT RULES:
+- Events with a specific time that has ALREADY PASSED: assume Niko did it. Don't remind him. Don't ask. It's done.
+- Events with a specific time coming up TODAY: remind him with the time.
+- Open-ended tasks from people (no specific time): mention once the next day. If still not done after 2 days, drop it — Niko either did it or decided not to.
+- Never nag. One reminder is enough.
+- Keep it casual and brief. Skip empty sections.
+- Don't make stuff up — only report what's actually in the notes.
+- If the vault is mostly empty, say so and suggest things Niko could start tracking.`;
 
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
