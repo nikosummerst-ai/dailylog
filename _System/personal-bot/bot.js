@@ -1078,12 +1078,80 @@ bot.on("document", async (ctx) => {
 });
 
 // ---------------------------------------------------------------------------
+// WhatsApp webhook — receives messages from Tasker/AutoNotification
+// ---------------------------------------------------------------------------
+
+import { createServer } from "http";
+
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || "niko-vault-2026";
+const WEBHOOK_PORT = process.env.PORT || 3000;
+
+const webhookServer = createServer(async (req, res) => {
+  if (req.method === "POST" && req.url === "/whatsapp") {
+    let body = "";
+    req.on("data", (chunk) => { body += chunk; });
+    req.on("end", async () => {
+      try {
+        const data = JSON.parse(body);
+
+        // Simple auth check
+        if (data.secret !== WEBHOOK_SECRET) {
+          res.writeHead(401);
+          res.end("Unauthorized");
+          return;
+        }
+
+        const sender = data.sender || "Unknown";
+        const message = data.message || "";
+        const app = data.app || "WhatsApp";
+
+        log("info", "Received WhatsApp webhook", { sender, message: message.slice(0, 100) });
+
+        // Process through Claude with WhatsApp context
+        const prompt = `WhatsApp message from ${sender}:\n"${message}"\n\nThis was intercepted from Niko's ${app}. Extract any useful information — events, plans, dates, decisions, requests, things to remember. Update the vault accordingly. If the sender is a known person, update their note too. If it's just casual chat with no actionable info, say "Nothing to log" and don't write to any files.`;
+
+        await enqueue(async () => {
+          const reply = await processWithClaude(prompt);
+          log("info", "WhatsApp processed", { sender, reply: reply.slice(0, 100) });
+
+          // Send summary to Telegram so Niko knows what was logged
+          if (!reply.toLowerCase().includes("nothing to log")) {
+            try {
+              await bot.telegram.sendMessage(
+                process.env.TELEGRAM_USER_ID,
+                cleanForTelegram(`[${app}: ${sender}] ${reply}`)
+              );
+            } catch (err) {
+              log("error", "Failed to send Telegram notification", { error: err.message });
+            }
+          }
+        });
+
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: true }));
+      } catch (err) {
+        log("error", "Webhook error", { error: err.message });
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+  } else if (req.method === "GET" && req.url === "/health") {
+    res.writeHead(200);
+    res.end("ok");
+  } else {
+    res.writeHead(404);
+    res.end("Not found");
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Graceful shutdown
 // ---------------------------------------------------------------------------
 
 function shutdown(signal) {
   log("info", `Received ${signal}, shutting down...`);
   bot.stop(signal);
+  webhookServer.close();
   process.exit(0);
 }
 
@@ -1110,6 +1178,12 @@ async function main() {
     repo: isCloudMode ? GITHUB_REPO : undefined,
     vault: isCloudMode ? undefined : VAULT_PATH,
   });
+
+  // Start webhook server
+  webhookServer.listen(WEBHOOK_PORT, () => {
+    log("info", `Webhook server listening on port ${WEBHOOK_PORT}`);
+  });
+
   log("info", "Starting personal bot...");
   await bot.launch();
   log("info", "Bot is running. Waiting for messages...");
