@@ -1,0 +1,14 @@
+{
+  "name": "obsidian-personal-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "node --watch bot.js"
+  },
+  "dependencies": {
+    "telegraf": "^4.16.0",
+    "@anthropic-ai/sdk": "^0.39.0",
+    "openai": "^4.80.0"
+  }
+}

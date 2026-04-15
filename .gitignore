@@ -1,0 +1,6 @@
+.DS_Store
+.obsidian/
+.claude/
+_System/personal-bot/.env
+_System/personal-bot/node_modules/
+.trash/

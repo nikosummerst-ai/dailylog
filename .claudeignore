@@ -1,0 +1,32 @@
+# Credentials & Secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+*-credentials.json
+secrets/
+.secrets/
+
+# Dependencies & Build
+node_modules/
+dist/
+build/
+coverage/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Generated
+*.map
+*.min.js
+*.min.css
+
+# Obsidian internals
+.obsidian/
+_System/attachments/
+.gitkeep
+.trash/
