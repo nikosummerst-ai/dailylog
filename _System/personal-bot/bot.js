@@ -782,6 +782,34 @@ async function processWithClaudeMultimodal(userContent) {
 }
 
 // ---------------------------------------------------------------------------
+// Message queue — process one message at a time to avoid race conditions
+// ---------------------------------------------------------------------------
+
+const messageQueue = [];
+let processing = false;
+
+async function enqueue(fn) {
+  return new Promise((resolve, reject) => {
+    messageQueue.push({ fn, resolve, reject });
+    processQueue();
+  });
+}
+
+async function processQueue() {
+  if (processing || messageQueue.length === 0) return;
+  processing = true;
+  const { fn, resolve, reject } = messageQueue.shift();
+  try {
+    resolve(await fn());
+  } catch (err) {
+    reject(err);
+  } finally {
+    processing = false;
+    processQueue();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Bot handlers
 // ---------------------------------------------------------------------------
 
@@ -823,17 +851,19 @@ bot.on("text", async (ctx) => {
     text: text.slice(0, 100),
   });
 
-  try {
-    await ctx.sendChatAction("typing");
-    const reply = await processWithClaude(text);
-    await ctx.reply(cleanForTelegram(reply));
-  } catch (err) {
-    log("error", "Failed to process text message", {
-      error: err.message,
-      stack: err.stack,
-    });
-    await ctx.reply("Something went wrong processing that. Check the logs.");
-  }
+  await enqueue(async () => {
+    try {
+      await ctx.sendChatAction("typing");
+      const reply = await processWithClaude(text);
+      await ctx.reply(cleanForTelegram(reply));
+    } catch (err) {
+      log("error", "Failed to process text message", {
+        error: err.message,
+        stack: err.stack,
+      });
+      await ctx.reply("Something went wrong processing that. Check the logs.");
+    }
+  });
 });
 
 // Handle voice messages
@@ -845,21 +875,23 @@ bot.on("voice", async (ctx) => {
     duration: ctx.message.voice.duration,
   });
 
-  try {
-    await ctx.sendChatAction("typing");
+  await enqueue(async () => {
+    try {
+      await ctx.sendChatAction("typing");
 
-    const transcription = await transcribeVoice(ctx);
+      const transcription = await transcribeVoice(ctx);
 
-    await ctx.sendChatAction("typing");
-    const reply = await processWithClaude(transcription);
-    await ctx.reply(cleanForTelegram(reply));
-  } catch (err) {
-    log("error", "Failed to process voice message", {
-      error: err.message,
-      stack: err.stack,
-    });
-    await ctx.reply("Something went wrong processing that voice note. Check the logs.");
-  }
+      await ctx.sendChatAction("typing");
+      const reply = await processWithClaude(transcription);
+      await ctx.reply(cleanForTelegram(reply));
+    } catch (err) {
+      log("error", "Failed to process voice message", {
+        error: err.message,
+        stack: err.stack,
+      });
+      await ctx.reply("Something went wrong processing that voice note. Check the logs.");
+    }
+  });
 });
 
 // Handle photo messages
@@ -873,31 +905,33 @@ bot.on("photo", async (ctx) => {
 
   log("info", "Received photo", { from: ctx.from.id, caption: caption.slice(0, 50), fileId: photo.file_id });
 
-  try {
-    await ctx.sendChatAction("typing");
+  await enqueue(async () => {
+    try {
+      await ctx.sendChatAction("typing");
 
-    // Download photo
-    const response = await fetch(fileUrl);
-    const buffer = Buffer.from(await response.arrayBuffer());
-    const base64 = buffer.toString("base64");
-    const mediaType = "image/jpeg";
+      // Download photo
+      const response = await fetch(fileUrl);
+      const buffer = Buffer.from(await response.arrayBuffer());
+      const base64 = buffer.toString("base64");
+      const mediaType = "image/jpeg";
 
-    // Send to Claude with vision
-    const userContent = [
-      { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
-    ];
-    if (caption) {
-      userContent.push({ type: "text", text: caption });
-    } else {
-      userContent.push({ type: "text", text: "I'm sending you a photo. Describe what you see and ask me what I'd like to do with it \u2014 save it as a note, add it to a project, etc." });
+      // Send to Claude with vision
+      const userContent = [
+        { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
+      ];
+      if (caption) {
+        userContent.push({ type: "text", text: caption });
+      } else {
+        userContent.push({ type: "text", text: "I'm sending you a photo. Describe what you see and ask me what I'd like to do with it \u2014 save it as a note, add it to a project, etc." });
+      }
+
+      const reply = await processWithClaudeMultimodal(userContent);
+      await ctx.reply(cleanForTelegram(reply));
+    } catch (err) {
+      log("error", "Failed to process photo", { error: err.message, stack: err.stack });
+      await ctx.reply("Couldn't process that photo. Check the logs.");
     }
-
-    const reply = await processWithClaudeMultimodal(userContent);
-    await ctx.reply(cleanForTelegram(reply));
-  } catch (err) {
-    log("error", "Failed to process photo", { error: err.message, stack: err.stack });
-    await ctx.reply("Couldn't process that photo. Check the logs.");
-  }
+  });
 });
 
 // Handle document messages
