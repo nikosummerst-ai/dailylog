@@ -641,7 +641,9 @@ function buildSystemPrompt(dailyNotePath) {
 
 TODAY: ${todayISO()} (${todayHuman()})
 
-VAULT STRUCTURE:
+STRICT BOUNDARY: This bot is for Niko's PERSONAL life only. Never read, reference, or mention anything from: Areas/Triptease/, Meeting Notes/, work daily notes (Daily logs/YYYY-MM-DD.md without -personal), or the work Backlog. No work calendar, no work email, no Slack, no Triptease projects. If you accidentally see work content, ignore it completely.
+
+VAULT STRUCTURE (personal files only):
 - ${VAULT_PATH}/Areas/Personal/_context/About Me.md — who Niko is, key people, life context
 - ${VAULT_PATH}/Areas/Personal/Projects/ — active personal projects
 - ${VAULT_PATH}/Areas/Personal/Notes/ — people notes, reference material
