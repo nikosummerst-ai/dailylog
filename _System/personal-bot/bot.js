@@ -936,15 +936,22 @@ bot.help((ctx) => {
   if (!isAuthorised(ctx)) return;
   ctx.reply(
     "Things you can do:\n\n" +
-    "\ud83d\udcac Text: 'House viewing Thursday 3pm on Oak Lane'\n" +
-    "\ud83c\udfa4 Voice notes: just talk, I'll transcribe and file it\n" +
-    "\ud83d\udcf8 Photos: send with a caption for context\n" +
-    "\u2753 Questions: 'What's going on with the house hunt?'\n" +
-    "\ud83d\udcc5 Schedule: 'Do I have time to do X this week?'\n" +
-    "\ud83d\udc64 People: 'Charlotte's mum's birthday is June 12'\n" +
-    "\ud83d\udcc1 Projects: 'Start tracking the garden renovation'\n\n" +
+    "Text: 'House viewing Thursday 3pm on Oak Lane'\n" +
+    "Voice notes: just talk, I'll transcribe and file it\n" +
+    "Photos: send with a caption for context\n" +
+    "Questions: 'What's going on with the house hunt?'\n" +
+    "Schedule: 'Do I have time to do X this week?'\n" +
+    "People: 'Charlotte's mum's birthday is June 12'\n" +
+    "Projects: 'Start tracking the garden renovation'\n" +
+    "/briefing: Get your personal morning briefing now\n\n" +
     "I update your Obsidian vault automatically."
   );
+});
+
+bot.command("briefing", async (ctx) => {
+  if (!isAuthorised(ctx)) return;
+  await ctx.reply("Pulling together your briefing...");
+  await sendDailyBriefing();
 });
 
 // Handle text messages
