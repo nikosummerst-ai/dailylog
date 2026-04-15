@@ -1145,6 +1145,170 @@ const webhookServer = createServer(async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Daily personal briefing — runs every morning at 8am BST
+// ---------------------------------------------------------------------------
+
+async function sendDailyBriefing() {
+  log("info", "Running daily personal briefing...");
+
+  try {
+    // Read key notes to build the briefing
+    const today = todayISO();
+    const personalDailyPath = `Daily logs/${today}-personal.md`;
+    const dailyPath = `Daily logs/${today}.md`;
+    const backlogPath = `Daily logs/Backlog.md`;
+    const charlottePath = `Areas/Personal/Notes/Charlotte.md`;
+
+    // Gather context from vault
+    const filesToRead = [personalDailyPath, dailyPath, backlogPath, charlottePath];
+    const context = [];
+
+    for (const filePath of filesToRead) {
+      const result = isCloudMode
+        ? await githubGetFile(filePath).catch(() => null)
+        : await fs.readFile(path.join(VAULT_PATH, filePath), "utf-8").catch(() => null);
+
+      if (result) {
+        const content = isCloudMode ? result.content : result;
+        context.push(`--- ${filePath} ---\n${content}`);
+      }
+    }
+
+    // List personal projects
+    const projectsDir = "Areas/Personal/Projects";
+    let projectFiles = [];
+    try {
+      if (isCloudMode) {
+        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${projectsDir}`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${GITHUB_TOKEN}`, Accept: "application/vnd.github.v3+json" },
+        });
+        if (res.ok) {
+          const items = await res.json();
+          projectFiles = items.filter(i => i.name.endsWith(".md")).map(i => i.name);
+        }
+      } else {
+        const entries = await fs.readdir(path.join(VAULT_PATH, projectsDir));
+        projectFiles = entries.filter(e => e.endsWith(".md"));
+      }
+    } catch {}
+
+    // Read each active project
+    for (const pf of projectFiles) {
+      const fp = `${projectsDir}/${pf}`;
+      const result = isCloudMode
+        ? await githubGetFile(fp).catch(() => null)
+        : await fs.readFile(path.join(VAULT_PATH, fp), "utf-8").catch(() => null);
+      if (result) {
+        const content = isCloudMode ? result.content : result;
+        if (content.includes("status: active")) {
+          context.push(`--- ${fp} ---\n${content}`);
+        }
+      }
+    }
+
+    // List people notes
+    const peopleDir = "Areas/Personal/Notes";
+    try {
+      let peopleFiles = [];
+      if (isCloudMode) {
+        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${peopleDir}`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${GITHUB_TOKEN}`, Accept: "application/vnd.github.v3+json" },
+        });
+        if (res.ok) {
+          const items = await res.json();
+          peopleFiles = items.filter(i => i.name.endsWith(".md")).map(i => i.name);
+        }
+      } else {
+        const entries = await fs.readdir(path.join(VAULT_PATH, peopleDir));
+        peopleFiles = entries.filter(e => e.endsWith(".md"));
+      }
+      for (const pf of peopleFiles) {
+        const fp = `${peopleDir}/${pf}`;
+        const result = isCloudMode
+          ? await githubGetFile(fp).catch(() => null)
+          : await fs.readFile(path.join(VAULT_PATH, fp), "utf-8").catch(() => null);
+        if (result) {
+          const content = isCloudMode ? result.content : result;
+          context.push(`--- ${fp} ---\n${content}`);
+        }
+      }
+    } catch {}
+
+    const briefingPrompt = `You are Niko's personal morning briefing assistant. It's ${todayHuman()}. Based on the vault notes below, compile a personal morning briefing.
+
+VAULT CONTENTS:
+${context.join("\n\n")}
+
+Create a briefing covering:
+
+1. What's on today — events, viewings, plans, appointments from today's notes
+2. Charlotte / Meep — anything involving her today or this week, things to remember
+3. Active projects — quick status on house hunt, wedding, trips, anything else active
+4. Things to remember — upcoming birthdays, deadlines, stuff that's easy to forget
+5. People check-in — anyone you haven't heard from in a while, pending responses
+6. Heads up — anything coming up in the next few days you should be aware of
+
+Keep it casual and brief. If there's nothing for a section, skip it. Don't make stuff up — only report what's actually in the notes. If the vault is mostly empty, say so and suggest things Niko could start tracking.`;
+
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 2048,
+      messages: [{ role: "user", content: briefingPrompt }],
+    });
+
+    const briefingText = response.content
+      .filter(b => b.type === "text")
+      .map(b => b.text)
+      .join("\n");
+
+    await bot.telegram.sendMessage(
+      process.env.TELEGRAM_USER_ID,
+      cleanForTelegram(briefingText)
+    );
+
+    log("info", "Daily briefing sent");
+  } catch (err) {
+    log("error", "Failed to send daily briefing", { error: err.message, stack: err.stack });
+  }
+}
+
+// Schedule daily briefing at 8am BST (7am UTC in summer, 8am UTC in winter)
+function scheduleDailyBriefing() {
+  function msUntilNext8am() {
+    const now = new Date();
+    // Get current time in London
+    const londonTime = new Date(now.toLocaleString("en-US", { timeZone: "Europe/London" }));
+    const target = new Date(londonTime);
+    target.setHours(8, 0, 0, 0);
+    if (londonTime >= target) {
+      target.setDate(target.getDate() + 1);
+    }
+    // Convert back to UTC diff
+    const londonNow = londonTime.getTime();
+    const londonTarget = target.getTime();
+    return londonTarget - londonNow;
+  }
+
+  function scheduleNext() {
+    const ms = msUntilNext8am();
+    const hours = Math.round(ms / 3600000 * 10) / 10;
+    log("info", `Next personal briefing in ${hours} hours`);
+    setTimeout(async () => {
+      // Skip weekends
+      const day = new Date().toLocaleString("en-US", { timeZone: "Europe/London", weekday: "short" });
+      if (day !== "Sat" && day !== "Sun") {
+        await sendDailyBriefing();
+      }
+      scheduleNext();
+    }, ms);
+  }
+
+  scheduleNext();
+}
+
+// ---------------------------------------------------------------------------
 // Graceful shutdown
 // ---------------------------------------------------------------------------
 
@@ -1183,6 +1347,9 @@ async function main() {
   webhookServer.listen(WEBHOOK_PORT, () => {
     log("info", `Webhook server listening on port ${WEBHOOK_PORT}`);
   });
+
+  // Schedule daily personal briefing at 8am BST
+  scheduleDailyBriefing();
 
   log("info", "Starting personal bot...");
   await bot.launch();
