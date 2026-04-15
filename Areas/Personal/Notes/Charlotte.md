@@ -5,13 +5,26 @@ created: 2026-04-15
 
 # Charlotte (Meep)
 
-Partner.
+## About
+Niko's partner.
 
 ## Important Dates
 - 
 
-## Notes
+## Gift History
+- 
+
+## Likes & Interests
+- 
+
+## Key Facts
+- 
+
+## Recent Context
 - 
 
 ## Upcoming
+- 
+
+## Notes
 - 
