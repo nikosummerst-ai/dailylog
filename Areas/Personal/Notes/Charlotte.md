@@ -18,7 +18,8 @@ Niko's partner.
 - 
 
 ## Key Facts
-- 
+-
+- Brother: Christopher (was storing Meep's stuff at his place)
 
 ## Recent Context
 - 
