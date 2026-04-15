@@ -617,6 +617,22 @@ async function transcribeVoice(ctx) {
 }
 
 // ---------------------------------------------------------------------------
+// Clean Claude's markdown for Telegram plain text
+// ---------------------------------------------------------------------------
+
+function cleanForTelegram(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "$1")   // **bold** → bold
+    .replace(/\*(.+?)\*/g, "$1")        // *italic* → italic
+    .replace(/__(.+?)__/g, "$1")        // __underline__ → underline
+    .replace(/_(.+?)_/g, "$1")          // _italic_ → italic
+    .replace(/~~(.+?)~~/g, "$1")        // ~~strike~~ → strike
+    .replace(/`(.+?)`/g, "$1")          // `code` → code
+    .replace(/#{1,3}\s/g, "")           // ### headings → plain
+    .trim();
+}
+
+// ---------------------------------------------------------------------------
 // Claude conversation — tool use loop
 // ---------------------------------------------------------------------------
 
@@ -810,7 +826,7 @@ bot.on("text", async (ctx) => {
   try {
     await ctx.sendChatAction("typing");
     const reply = await processWithClaude(text);
-    await ctx.reply(reply);
+    await ctx.reply(cleanForTelegram(reply));
   } catch (err) {
     log("error", "Failed to process text message", {
       error: err.message,
@@ -836,7 +852,7 @@ bot.on("voice", async (ctx) => {
 
     await ctx.sendChatAction("typing");
     const reply = await processWithClaude(transcription);
-    await ctx.reply(reply);
+    await ctx.reply(cleanForTelegram(reply));
   } catch (err) {
     log("error", "Failed to process voice message", {
       error: err.message,
@@ -877,7 +893,7 @@ bot.on("photo", async (ctx) => {
     }
 
     const reply = await processWithClaudeMultimodal(userContent);
-    await ctx.reply(reply);
+    await ctx.reply(cleanForTelegram(reply));
   } catch (err) {
     log("error", "Failed to process photo", { error: err.message, stack: err.stack });
     await ctx.reply("Couldn't process that photo. Check the logs.");
@@ -908,12 +924,12 @@ bot.on("document", async (ctx) => {
         { type: "text", text: caption || `Document: ${doc.file_name}. What should I do with this?` },
       ];
       const reply = await processWithClaudeMultimodal(userContent);
-      await ctx.reply(reply);
+      await ctx.reply(cleanForTelegram(reply));
     } else {
       // For non-image docs, just note the file name and caption
       const text = `I received a document: ${doc.file_name} (${doc.mime_type}). ${caption}`;
       const reply = await processWithClaude(text);
-      await ctx.reply(reply);
+      await ctx.reply(cleanForTelegram(reply));
     }
   } catch (err) {
     log("error", "Failed to process document", { error: err.message, stack: err.stack });
