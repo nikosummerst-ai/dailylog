@@ -351,6 +351,93 @@ async function updateNote(filePath, oldText, newText) {
   return { success: true, filePath };
 }
 
+/**
+ * Read the contents of a note from the vault.
+ */
+async function readNote(filePath) {
+  try {
+    if (isCloudMode) {
+      const relPath = toRelativePath(filePath);
+      const file = await githubGetFile(relPath);
+      if (!file) return { success: false, error: "File not found" };
+      return { success: true, content: file.content };
+    }
+    const content = await fs.readFile(filePath, "utf-8");
+    return { success: true, content };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * List files in a vault directory.
+ */
+async function listFiles(directory) {
+  try {
+    if (isCloudMode) {
+      const relPath = toRelativePath(directory);
+      const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${relPath}`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${GITHUB_TOKEN}`, Accept: "application/vnd.github.v3+json" },
+      });
+      if (!res.ok) return { success: false, error: `GitHub API error: ${res.status}` };
+      const items = await res.json();
+      const files = items.map(i => ({ name: i.name, type: i.type }));
+      return { success: true, files };
+    }
+    const entries = await fs.readdir(directory, { withFileTypes: true });
+    const files = entries.map(e => ({ name: e.name, type: e.isDirectory() ? "dir" : "file" }));
+    return { success: true, files };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Search across all vault notes for a keyword or phrase.
+ */
+async function searchVault(query) {
+  try {
+    if (isCloudMode) {
+      // Use GitHub search API
+      const url = `https://api.github.com/search/code?q=${encodeURIComponent(query)}+repo:${GITHUB_REPO}`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${GITHUB_TOKEN}`, Accept: "application/vnd.github.v3+json" },
+      });
+      if (!res.ok) return { success: false, error: `GitHub search error: ${res.status}` };
+      const data = await res.json();
+      const results = (data.items || []).slice(0, 10).map(i => ({ path: i.path, name: i.name }));
+      return { success: true, results };
+    }
+    // Local: recursive grep-like search
+    const results = [];
+    const lowerQuery = query.toLowerCase();
+    async function searchDir(dir) {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.name.startsWith(".") || entry.name === "node_modules") continue;
+        if (entry.isDirectory()) {
+          await searchDir(fullPath);
+        } else if (entry.name.endsWith(".md")) {
+          try {
+            const content = await fs.readFile(fullPath, "utf-8");
+            if (content.toLowerCase().includes(lowerQuery)) {
+              const lines = content.split("\n");
+              const matchLine = lines.find(l => l.toLowerCase().includes(lowerQuery));
+              results.push({ path: fullPath, snippet: matchLine?.trim().slice(0, 120) || "" });
+            }
+          } catch {}
+        }
+      }
+    }
+    await searchDir(VAULT_PATH);
+    return { success: true, results: results.slice(0, 15) };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Tool definitions for Claude
 // ---------------------------------------------------------------------------
@@ -426,6 +513,48 @@ const TOOLS = [
       required: ["file_path", "old_text", "new_text"],
     },
   },
+  {
+    name: "read_note",
+    description: "Read the contents of a note from the vault. Use this to answer questions about what's in the vault, check schedules, look up information about people, projects, or events.",
+    input_schema: {
+      type: "object",
+      properties: {
+        file_path: {
+          type: "string",
+          description: "Absolute path to the markdown file to read",
+        },
+      },
+      required: ["file_path"],
+    },
+  },
+  {
+    name: "list_files",
+    description: "List files in a vault directory. Use this to discover what notes exist, find projects, or explore the vault structure.",
+    input_schema: {
+      type: "object",
+      properties: {
+        directory: {
+          type: "string",
+          description: "Absolute path to the directory to list",
+        },
+      },
+      required: ["directory"],
+    },
+  },
+  {
+    name: "search_vault",
+    description: "Search across all vault notes for a keyword or phrase. Returns matching file paths and snippets. Use this to find relevant notes when you're not sure which file has the information.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "The search term or phrase to look for",
+        },
+      },
+      required: ["query"],
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -440,6 +569,12 @@ async function executeTool(toolName, toolInput) {
       return createNote(toolInput.file_path, toolInput.content);
     case "update_note":
       return updateNote(toolInput.file_path, toolInput.old_text, toolInput.new_text);
+    case "read_note":
+      return readNote(toolInput.file_path);
+    case "list_files":
+      return listFiles(toolInput.directory);
+    case "search_vault":
+      return searchVault(toolInput.query);
     default:
       return { success: false, error: `Unknown tool: ${toolName}` };
   }
@@ -485,44 +620,65 @@ async function transcribeVoice(ctx) {
 // Claude conversation — tool use loop
 // ---------------------------------------------------------------------------
 
+function buildSystemPrompt(dailyNotePath) {
+  return `You are Niko's personal AI assistant. You live in his Telegram and manage his personal Obsidian vault — his second brain for life outside work.
+
+TODAY: ${todayISO()} (${todayHuman()})
+
+VAULT STRUCTURE:
+- ${VAULT_PATH}/Areas/Personal/_context/About Me.md — who Niko is, key people, life context
+- ${VAULT_PATH}/Areas/Personal/Projects/ — active personal projects (each has tasks, notes, status)
+- ${VAULT_PATH}/Areas/Personal/Notes/ — people notes, reference material
+- ${VAULT_PATH}/Daily logs/YYYY-MM-DD-personal.md — personal daily notes
+- ${VAULT_PATH}/Daily logs/Backlog.md — master task/deadline list
+
+KEY PEOPLE:
+- Charlotte (also called "Meep") — Niko's partner. Note: ${KNOWN_NOTES.charlotte}
+- Mum & Dad — wedding coming up. Note: ${KNOWN_NOTES.wedding}
+
+KEY PROJECTS:
+- House hunting: ${KNOWN_NOTES.house}
+- Mum & Dad's wedding: ${KNOWN_NOTES.wedding}
+- Personal daily note: ${dailyNotePath}
+
+CAPABILITIES — you can:
+1. **Add events, tasks, and notes** to the vault (append_to_note, create_note, update_note)
+2. **Read any note** to answer questions (read_note)
+3. **Search the vault** to find information (search_vault)
+4. **List files** to discover what exists (list_files)
+5. **Create new projects** — make a new .md file in Areas/Personal/Projects/ with frontmatter (status, tags, created date) and sections (Overview, Tasks, Notes)
+6. **Track people** — create new person notes in Areas/Personal/Notes/ with sections (Important Dates, Notes, Upcoming)
+
+BEHAVIORS:
+- When Niko asks a QUESTION ("do I have time this week?", "what's going on with the house?", "when is X?"), READ the relevant notes first using read_note and search_vault, then answer based on what you find. Don't guess.
+- When Niko mentions a NEW person you haven't seen before, create a person note in Areas/Personal/Notes/
+- When Niko mentions a NEW project or ongoing thing, create a project note in Areas/Personal/Projects/
+- When Niko sends a photo with context, describe what you see and save relevant info to the right note
+- When Niko asks about scheduling/time, read the daily note and backlog to understand what's already planned
+- Always add date-specific items to today's personal daily note AND the relevant project/person note
+- Use - [ ] for tasks, - for notes/events
+- Be conversational and brief in replies — this is Telegram, not an essay
+- If you're not sure what to do, ask Niko
+
+CREATING NEW NOTES:
+- New project: ${VAULT_PATH}/Areas/Personal/Projects/[Name].md with frontmatter: status (active), tags ([project, personal]), area (Personal), created (today's date). Sections: Overview, Tasks, Notes
+- New person: ${VAULT_PATH}/Areas/Personal/Notes/[Name].md with frontmatter: tags ([person, personal]), created (today's date). Sections: About, Important Dates, Notes, Upcoming
+- Use [[wikilinks]] to connect notes: [[Charlotte]], [[House Checker]], [[Mum and Dads Wedding]], etc.
+
+TONE: Casual, helpful, like a sharp personal assistant who knows your life. Brief replies.`;
+}
+
 async function processWithClaude(userMessage) {
   const dailyNotePath = await ensurePersonalDailyNote();
 
-  const systemPrompt = `You are Niko's personal life assistant. You receive messages from Niko via Telegram and update his Obsidian vault accordingly.
-
-IMPORTANT CONTEXT:
-- Today's date: ${todayISO()} (${todayHuman()})
-- Today's personal daily note: ${dailyNotePath}
-- Charlotte note: ${KNOWN_NOTES.charlotte}
-- Wedding note: ${KNOWN_NOTES.wedding}
-- House note: ${KNOWN_NOTES.house}
-- Vault root: ${VAULT_PATH}
-
-RULES:
-1. If the message is about a DATE/EVENT:
-   - If it mentions Charlotte/Meep, also append to the Charlotte note under "Upcoming" or "Notes"
-   - If it mentions the wedding / mum / dad's wedding, also append to the wedding note under "Tasks" or "Notes"
-   - If it mentions house stuff / property / viewings, also append to the house note under "Notes"
-   - Always add date-specific items to the personal daily note in the right section
-
-2. If it's a TODO or REMINDER:
-   - Add as a task (- [ ] format) to the relevant project note or today's personal daily note
-
-3. If it's a general note or thought:
-   - Add to today's personal daily note under the "Notes" section
-
-4. Use the append_to_note tool to add content. Only use create_note if a completely new file is needed. Use update_note sparingly.
-
-5. You may call multiple tools if the message relates to multiple notes (e.g. a Charlotte event goes in both the daily note and Charlotte.md).
-
-6. After making changes, provide a brief, friendly confirmation of what you did. Keep it short — this goes back as a Telegram message.`;
+  const systemPrompt = buildSystemPrompt(dailyNotePath);
 
   const messages = [{ role: "user", content: userMessage }];
 
   // Tool-use loop: Claude may call tools, we execute them and feed results back
   let response = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 1024,
+    max_tokens: 2048,
     system: systemPrompt,
     tools: TOOLS,
     messages,
@@ -550,7 +706,7 @@ RULES:
 
     response = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 1024,
+      max_tokens: 2048,
       system: systemPrompt,
       tools: TOOLS,
       messages,
@@ -562,6 +718,53 @@ RULES:
   return textBlocks.map((b) => b.text).join("\n") || "Done.";
 }
 
+async function processWithClaudeMultimodal(userContent) {
+  const dailyNotePath = await ensurePersonalDailyNote();
+
+  const systemPrompt = buildSystemPrompt(dailyNotePath);
+
+  const messages = [{ role: "user", content: userContent }];
+
+  let response = await anthropic.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 2048,
+    system: systemPrompt,
+    tools: TOOLS,
+    messages,
+  });
+
+  while (response.stop_reason === "tool_use") {
+    const assistantContent = response.content;
+    messages.push({ role: "assistant", content: assistantContent });
+
+    const toolResults = [];
+    for (const block of assistantContent) {
+      if (block.type === "tool_use") {
+        log("info", `Claude called tool: ${block.name}`, block.input);
+        const result = await executeTool(block.name, block.input);
+        toolResults.push({
+          type: "tool_result",
+          tool_use_id: block.id,
+          content: JSON.stringify(result),
+        });
+      }
+    }
+
+    messages.push({ role: "user", content: toolResults });
+
+    response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 2048,
+      system: systemPrompt,
+      tools: TOOLS,
+      messages,
+    });
+  }
+
+  const textBlocks = response.content.filter((b) => b.type === "text");
+  return textBlocks.map((b) => b.text).join("\n") || "Done.";
+}
+
 // ---------------------------------------------------------------------------
 // Bot handlers
 // ---------------------------------------------------------------------------
@@ -569,17 +772,28 @@ RULES:
 bot.start((ctx) => {
   if (!isAuthorised(ctx)) return;
   ctx.reply(
-    "Hey Niko! I'm your personal vault assistant. Send me text or voice notes and I'll update your Obsidian vault."
+    "Hey Niko! I'm your personal assistant. Here's what I can do:\n\n" +
+    "\ud83d\udcdd Send me text or voice notes \u2014 I'll add them to your vault\n" +
+    "\ud83d\udcf8 Send photos \u2014 I'll describe and save them\n" +
+    "\u2753 Ask me questions \u2014 I'll search your vault and answer\n" +
+    "\ud83d\udcc5 Ask about scheduling \u2014 I'll check what you've got on\n" +
+    "\ud83c\udd95 Tell me about new projects or people \u2014 I'll create notes\n\n" +
+    "I manage your personal daily logs, Charlotte notes, house hunting, wedding planning, and anything else you throw at me."
   );
 });
 
 bot.help((ctx) => {
   if (!isAuthorised(ctx)) return;
   ctx.reply(
-    "Send me:\n" +
-      "- Text messages — I'll figure out where they go in your vault\n" +
-      "- Voice notes — I'll transcribe them first, then process\n\n" +
-      "I can update your personal daily note, Charlotte's note, the wedding note, or the house checker note."
+    "Things you can do:\n\n" +
+    "\ud83d\udcac Text: 'House viewing Thursday 3pm on Oak Lane'\n" +
+    "\ud83c\udfa4 Voice notes: just talk, I'll transcribe and file it\n" +
+    "\ud83d\udcf8 Photos: send with a caption for context\n" +
+    "\u2753 Questions: 'What's going on with the house hunt?'\n" +
+    "\ud83d\udcc5 Schedule: 'Do I have time to do X this week?'\n" +
+    "\ud83d\udc64 People: 'Charlotte's mum's birthday is June 12'\n" +
+    "\ud83d\udcc1 Projects: 'Start tracking the garden renovation'\n\n" +
+    "I update your Obsidian vault automatically."
   );
 });
 
@@ -617,10 +831,8 @@ bot.on("voice", async (ctx) => {
 
   try {
     await ctx.sendChatAction("typing");
-    await ctx.reply("Transcribing your voice note...");
 
     const transcription = await transcribeVoice(ctx);
-    await ctx.reply(`Heard: "${transcription}"\n\nProcessing...`);
 
     await ctx.sendChatAction("typing");
     const reply = await processWithClaude(transcription);
@@ -631,6 +843,81 @@ bot.on("voice", async (ctx) => {
       stack: err.stack,
     });
     await ctx.reply("Something went wrong processing that voice note. Check the logs.");
+  }
+});
+
+// Handle photo messages
+bot.on("photo", async (ctx) => {
+  if (!isAuthorised(ctx)) return;
+
+  const caption = ctx.message.caption || "";
+  const photo = ctx.message.photo[ctx.message.photo.length - 1]; // highest res
+  const file = await ctx.telegram.getFile(photo.file_id);
+  const fileUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;
+
+  log("info", "Received photo", { from: ctx.from.id, caption: caption.slice(0, 50), fileId: photo.file_id });
+
+  try {
+    await ctx.sendChatAction("typing");
+
+    // Download photo
+    const response = await fetch(fileUrl);
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const base64 = buffer.toString("base64");
+    const mediaType = "image/jpeg";
+
+    // Send to Claude with vision
+    const userContent = [
+      { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
+    ];
+    if (caption) {
+      userContent.push({ type: "text", text: caption });
+    } else {
+      userContent.push({ type: "text", text: "I'm sending you a photo. Describe what you see and ask me what I'd like to do with it \u2014 save it as a note, add it to a project, etc." });
+    }
+
+    const reply = await processWithClaudeMultimodal(userContent);
+    await ctx.reply(reply);
+  } catch (err) {
+    log("error", "Failed to process photo", { error: err.message, stack: err.stack });
+    await ctx.reply("Couldn't process that photo. Check the logs.");
+  }
+});
+
+// Handle document messages
+bot.on("document", async (ctx) => {
+  if (!isAuthorised(ctx)) return;
+
+  const doc = ctx.message.document;
+  const caption = ctx.message.caption || "";
+
+  log("info", "Received document", { from: ctx.from.id, fileName: doc.file_name, mimeType: doc.mime_type });
+
+  try {
+    await ctx.sendChatAction("typing");
+
+    if (doc.mime_type?.startsWith("image/")) {
+      const file = await ctx.telegram.getFile(doc.file_id);
+      const fileUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;
+      const response = await fetch(fileUrl);
+      const buffer = Buffer.from(await response.arrayBuffer());
+      const base64 = buffer.toString("base64");
+
+      const userContent = [
+        { type: "image", source: { type: "base64", media_type: doc.mime_type, data: base64 } },
+        { type: "text", text: caption || `Document: ${doc.file_name}. What should I do with this?` },
+      ];
+      const reply = await processWithClaudeMultimodal(userContent);
+      await ctx.reply(reply);
+    } else {
+      // For non-image docs, just note the file name and caption
+      const text = `I received a document: ${doc.file_name} (${doc.mime_type}). ${caption}`;
+      const reply = await processWithClaude(text);
+      await ctx.reply(reply);
+    }
+  } catch (err) {
+    log("error", "Failed to process document", { error: err.message, stack: err.stack });
+    await ctx.reply("Couldn't process that document. Check the logs.");
   }
 });
 
