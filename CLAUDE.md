@@ -38,3 +38,43 @@ These are the single source of truth. When something changes, update the file in
 - Never modify files in `_System/Templates/`
 - Don't create files in `_System/attachments/`
 - Don't edit raw meeting transcripts — add notes below them
+
+## Git & Deployment
+
+### Repository
+- **GitHub**: https://github.com/nikosummerst-ai/dailylog.git (Niko's personal GitHub account)
+- Local git uses Triptease SSH key (`nikosummers-sudo`), which can't push to the personal repo
+- **To push**: use token auth — `git push https://<GITHUB_PAT>@github.com/nikosummerst-ai/dailylog.git main`
+- Generate classic PATs at: https://github.com/settings/tokens (needs `repo` scope)
+- `.gitignore` excludes: `.obsidian/`, `.claude/`, `.env`, `node_modules/`
+
+### Personal Telegram Bot (Railway)
+- **Code**: `_System/personal-bot/` (bot.js, Dockerfile, railway.toml)
+- **Railway**: deployed on Niko's personal Railway account (trial, $5/30 days)
+- **Root directory in Railway**: `_System/personal-bot`
+- **Bot**: https://t.me/nikodailyreminders_bot
+- **Telegram user ID**: 1512417003
+- Runs in **cloud mode** (writes to vault via GitHub API, not local filesystem)
+- Railway env vars needed: `TELEGRAM_BOT_TOKEN`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `TELEGRAM_USER_ID`, `GITHUB_TOKEN`, `GITHUB_REPO=nikosummerst-ai/dailylog`
+- Auto-deploys when you push to `main`
+
+### To deploy changes to the bot:
+1. Edit `_System/personal-bot/bot.js`
+2. `git add -A && git commit -m "description"`
+3. `git push https://<GITHUB_PAT>@github.com/nikosummerst-ai/dailylog.git main`
+4. Railway auto-redeploys
+
+### Local Launch Agents (macOS)
+- **QMD auto-embed**: `~/Library/LaunchAgents/com.qmd.auto-embed.plist` — runs `qmd update && qmd embed` at 12am and 12pm
+- **Personal bot (disabled)**: `~/Library/LaunchAgents/com.niko.personal-bot.plist` — unloaded since bot now runs on Railway
+
+### Remote Scheduled Agents (Anthropic cloud, no laptop needed)
+- **Morning Briefing**: `trig_01AEbxhpzxKWSHTBSDch389g` — weekdays 9am BST → Slack DM. Reads Gmail, Calendar, Slack, Notion tasks. Includes procrastination detection and smart prioritization
+- **Meeting Note Importer**: `trig_01YU3rGDvyTg16JTpVDJ9LKk` — weekdays 6pm BST → Slack DM. Checks Notion for new meeting notes, summarizes them
+- Manage at: https://claude.ai/code/scheduled
+
+### QMD Semantic Search
+- Collection: `obsidian` pointing at this vault
+- Auto-embeds twice daily via Launch Agent
+- Manual: `qmd update && qmd embed`
+- MCP server configured in `~/.claude.json` for Claude Code access
