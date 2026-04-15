@@ -21,6 +21,9 @@ last-updated: 2026-04-15
 | Nov 24 | Pack bags — 3 days before Orlando ✈️ | [[Orlando Trip]] |
 | Nov 27 | ✈️ **FLY TO ORLANDO** | [[Orlando Trip]] |
 | Dec 5 | 🏠 **Return from Orlando** | [[Orlando Trip]] |
+| ASAP | Write wedding speech (2–4 mins) for venue submission | [[Mum and Dads Wedding]] |
+| May 8 | Haircut at 12pm (day before wedding) | [[Mum and Dads Wedding]] |
+| May 9 | 🎉 **Mum & Dad's Wedding Day** | [[Mum and Dads Wedding]] |
 
 ## Active Action Items
 
