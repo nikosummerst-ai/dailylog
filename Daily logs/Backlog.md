@@ -16,6 +16,11 @@ last-updated: 2026-04-15
 | May 5 | **Hard print deadline** — DBS persona booklets | [[Guest Personas]] / DBS |
 | May 7 | CSV export for [[Peter Yabsley]]'s vibe-coding workshop | [[Guest Personas]] |
 | May 12-13 | Direct Booking Summit — Mexico City | DBS Event |
+| Nov 1 | Start prepping for Orlando — check passports, insurance, packing list | [[Orlando Trip]] |
+| Nov 14 | Two weeks out — sort baggage, airport transfers, confirm all bookings | [[Orlando Trip]] |
+| Nov 24 | Pack bags — 3 days before Orlando ✈️ | [[Orlando Trip]] |
+| Nov 27 | ✈️ **FLY TO ORLANDO** | [[Orlando Trip]] |
+| Dec 5 | 🏠 **Return from Orlando** | [[Orlando Trip]] |
 
 ## Active Action Items
 
