@@ -1165,15 +1165,23 @@ async function sendDailyBriefing() {
   log("info", "Running daily personal briefing...");
 
   try {
-    // Read key notes to build the briefing
+    // Read ONLY personal files — no work stuff
     const today = todayISO();
     const personalDailyPath = `Daily logs/${today}-personal.md`;
-    const dailyPath = `Daily logs/${today}.md`;
-    const backlogPath = `Daily logs/Backlog.md`;
     const charlottePath = `Areas/Personal/Notes/Charlotte.md`;
+    const aboutMePath = `Areas/Personal/_context/About Me.md`;
 
-    // Gather context from vault
-    const filesToRead = [personalDailyPath, dailyPath, backlogPath, charlottePath];
+    // Include last 3 days of personal notes for recent context
+    const recentDays = [];
+    for (let i = 1; i <= 3; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const iso = d.toISOString().split("T")[0];
+      recentDays.push(`Daily logs/${iso}-personal.md`);
+    }
+
+    // Only personal files — no work daily notes, no work backlog
+    const filesToRead = [personalDailyPath, charlottePath, aboutMePath, ...recentDays];
     const context = [];
 
     for (const filePath of filesToRead) {
@@ -1249,7 +1257,7 @@ async function sendDailyBriefing() {
       }
     } catch {}
 
-    const briefingPrompt = `You are Niko's personal morning briefing assistant. It's ${todayHuman()}. Based on the vault notes below, compile a personal morning briefing.
+    const briefingPrompt = `You are Niko's PERSONAL morning briefing assistant. It's ${todayHuman()}. This is strictly about his personal life — NOT work. No meetings, no Triptease, no Slack, no projects from work. Only personal stuff.
 
 VAULT CONTENTS:
 ${context.join("\n\n")}
