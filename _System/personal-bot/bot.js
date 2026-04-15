@@ -954,6 +954,12 @@ bot.command("briefing", async (ctx) => {
   await sendDailyBriefing();
 });
 
+bot.command("evening", async (ctx) => {
+  if (!isAuthorised(ctx)) return;
+  await ctx.reply("Checking what's on for tonight...");
+  await sendEveningCheckIn();
+});
+
 // Handle text messages
 bot.on("text", async (ctx) => {
   if (!isAuthorised(ctx)) return;
@@ -1288,38 +1294,134 @@ IMPORTANT RULES:
   }
 }
 
-// Schedule daily briefing at 8am BST (7am UTC in summer, 8am UTC in winter)
-function scheduleDailyBriefing() {
-  function msUntilNext8am() {
-    const now = new Date();
-    // Get current time in London
-    const londonTime = new Date(now.toLocaleString("en-US", { timeZone: "Europe/London" }));
-    const target = new Date(londonTime);
-    target.setHours(8, 0, 0, 0);
-    if (londonTime >= target) {
-      target.setDate(target.getDate() + 1);
-    }
-    // Convert back to UTC diff
-    const londonNow = londonTime.getTime();
-    const londonTarget = target.getTime();
-    return londonTarget - londonNow;
-  }
+// ---------------------------------------------------------------------------
+// Evening check-in — 5pm BST
+// ---------------------------------------------------------------------------
 
+async function sendEveningCheckIn() {
+  log("info", "Running evening check-in...");
+
+  try {
+    const today = todayISO();
+    const personalDailyPath = `Daily logs/${today}-personal.md`;
+    const charlottePath = `Areas/Personal/Notes/Charlotte.md`;
+    const backlogPath = `Daily logs/Backlog.md`;
+
+    const filesToRead = [personalDailyPath, backlogPath, charlottePath];
+    const context = [];
+
+    for (const filePath of filesToRead) {
+      const result = isCloudMode
+        ? await githubGetFile(filePath).catch(() => null)
+        : await fs.readFile(path.join(VAULT_PATH, filePath), "utf-8").catch(() => null);
+      if (result) {
+        const content = isCloudMode ? result.content : result;
+        context.push(`--- ${filePath} ---\n${content}`);
+      }
+    }
+
+    // Also read active projects
+    const projectsDir = "Areas/Personal/Projects";
+    try {
+      let projectFiles = [];
+      if (isCloudMode) {
+        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${projectsDir}`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${GITHUB_TOKEN}`, Accept: "application/vnd.github.v3+json" },
+        });
+        if (res.ok) {
+          const items = await res.json();
+          projectFiles = items.filter(i => i.name.endsWith(".md")).map(i => i.name);
+        }
+      } else {
+        const entries = await fs.readdir(path.join(VAULT_PATH, projectsDir));
+        projectFiles = entries.filter(e => e.endsWith(".md"));
+      }
+      for (const pf of projectFiles) {
+        const fp = `${projectsDir}/${pf}`;
+        const result = isCloudMode
+          ? await githubGetFile(fp).catch(() => null)
+          : await fs.readFile(path.join(VAULT_PATH, fp), "utf-8").catch(() => null);
+        if (result) {
+          const content = isCloudMode ? result.content : result;
+          if (content.includes("status: active")) {
+            context.push(`--- ${fp} ---\n${content}`);
+          }
+        }
+      }
+    } catch {}
+
+    const prompt = `You are Niko's evening check-in assistant. It's 5pm on ${todayHuman()}. Niko finishes work at 6pm and Charlotte gets home after that. Based on the vault notes, give him a quick heads-up on what he needs to sort before the evening.
+
+VAULT CONTENTS:
+${context.join("\n\n")}
+
+Cover ONLY what's relevant for THIS EVENING:
+
+1. Anything left to do today that hasn't happened yet (events with times after 5pm, errands, tasks)
+2. Anything Charlotte-related — is she expecting something? Did she ask for anything? Plans tonight?
+3. Quick errands — anything that needs doing before shops close or before Charlotte gets back
+4. Tomorrow preview — anything first thing tomorrow morning he should prep for tonight
+
+RULES:
+- Events earlier today with specific times: SKIP, already happened
+- Be very brief — this is a quick 5pm nudge, not a full briefing
+- If there's genuinely nothing, just say "Nothing urgent for tonight. Enjoy your evening."
+- Don't repeat the morning briefing. Only mention things relevant to the next few hours.`;
+
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1024,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const text = response.content.filter(b => b.type === "text").map(b => b.text).join("\n");
+
+    await bot.telegram.sendMessage(
+      process.env.TELEGRAM_USER_ID,
+      cleanForTelegram(text)
+    );
+
+    log("info", "Evening check-in sent");
+  } catch (err) {
+    log("error", "Failed to send evening check-in", { error: err.message, stack: err.stack });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Scheduler — 8am morning briefing + 5pm evening check-in
+// ---------------------------------------------------------------------------
+
+function msUntilNextTime(hour) {
+  const now = new Date();
+  const londonTime = new Date(now.toLocaleString("en-US", { timeZone: "Europe/London" }));
+  const target = new Date(londonTime);
+  target.setHours(hour, 0, 0, 0);
+  if (londonTime >= target) {
+    target.setDate(target.getDate() + 1);
+  }
+  return target.getTime() - londonTime.getTime();
+}
+
+function scheduleRecurring(hour, label, fn) {
   function scheduleNext() {
-    const ms = msUntilNext8am();
+    const ms = msUntilNextTime(hour);
     const hours = Math.round(ms / 3600000 * 10) / 10;
-    log("info", `Next personal briefing in ${hours} hours`);
+    log("info", `Next ${label} in ${hours} hours`);
     setTimeout(async () => {
-      // Skip weekends
       const day = new Date().toLocaleString("en-US", { timeZone: "Europe/London", weekday: "short" });
       if (day !== "Sat" && day !== "Sun") {
-        await sendDailyBriefing();
+        await fn();
       }
       scheduleNext();
     }, ms);
   }
-
   scheduleNext();
+}
+
+function scheduleDailyBriefings() {
+  scheduleRecurring(8, "morning briefing", sendDailyBriefing);
+  scheduleRecurring(17, "evening check-in", sendEveningCheckIn);
 }
 
 // ---------------------------------------------------------------------------
@@ -1362,8 +1464,8 @@ async function main() {
     log("info", `Webhook server listening on port ${WEBHOOK_PORT}`);
   });
 
-  // Schedule daily personal briefing at 8am BST
-  scheduleDailyBriefing();
+  // Schedule 8am morning briefing + 5pm evening check-in
+  scheduleDailyBriefings();
 
   log("info", "Starting personal bot...");
   await bot.launch();
