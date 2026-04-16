@@ -1296,8 +1296,11 @@ const webhookServer = createServer(async (req, res) => {
           const reply = await processWithClaude(prompt);
           log("info", "WhatsApp processed", { sender, reply: reply.slice(0, 100) });
 
-          // Send summary to Telegram so Niko knows what was logged
-          if (!reply.toLowerCase().includes("nothing to log")) {
+          // Always log the result, notify Telegram for actionable items
+          if (reply.toLowerCase().includes("nothing to log")) {
+            log("info", "WhatsApp: nothing to log", { sender });
+          } else {
+            log("info", "WhatsApp: logged content", { sender, reply: reply.slice(0, 200) });
             try {
               await bot.telegram.sendMessage(
                 process.env.TELEGRAM_USER_ID,
