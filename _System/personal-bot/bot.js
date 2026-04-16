@@ -1256,13 +1256,18 @@ async function sendDailyBriefing() {
     const context = [];
 
     for (const filePath of filesToRead) {
-      const result = isCloudMode
-        ? await githubGetFile(filePath).catch(() => null)
-        : await fs.readFile(path.join(VAULT_PATH, filePath), "utf-8").catch(() => null);
+      try {
+        const result = isCloudMode
+          ? await githubGetFile(filePath)
+          : await fs.readFile(path.join(VAULT_PATH, filePath), "utf-8");
 
-      if (result) {
-        const content = isCloudMode ? result.content : result;
-        context.push(`--- ${filePath} ---\n${content}`);
+        if (result) {
+          const content = isCloudMode ? result.content : result;
+          context.push(`--- ${filePath} ---\n${content}`);
+          log("info", `Briefing: loaded ${filePath}`);
+        }
+      } catch (err) {
+        log("info", `Briefing: skipped ${filePath}`, { error: err.message });
       }
     }
 
@@ -1327,6 +1332,8 @@ async function sendDailyBriefing() {
         }
       }
     } catch {}
+
+    log("info", `Briefing: ${context.length} files loaded, isCloudMode=${isCloudMode}`);
 
     const briefingPrompt = `You are Niko's PERSONAL morning briefing assistant. It's ${todayHuman()}. Personal life only — NO work, Triptease, Slack, or work projects.
 
