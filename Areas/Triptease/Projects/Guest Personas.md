@@ -1,8 +1,10 @@
 ---
 status: active
+priority: high
 tags: [project, automation]
 area: Triptease
 created: 2026-04-15
+updated: 2026-04-16
 ---
 
 # Guest Personas
@@ -18,6 +20,10 @@ Python, Railway, Modal, Claude API, Firecrawl, Apify, n8n, BigQuery
 - **Railway (dev)**: guest-personas-dev
 - **S3 Dashboard**: https://guest-segments-generator.s3.amazonaws.com/dashboard.html
 - **S3 Bucket**: guest-segments-generator (us-east-1)
+
+## Related Projects
+- [[Guest Persona CRM Tagging]] — CRM integration using persona data
+- [[DBS Guest Personas Print Assets]] — print booklet for DBS events
 
 ## Links
 - Code: ~/Desktop/ClaudeProjects/Claude Guest Personas
