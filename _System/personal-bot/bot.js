@@ -911,6 +911,8 @@ Always use [[wikilinks]] to connect: [[Charlotte]], [[House Checker]], [[Mum and
 
 You have access to the last 24 hours of conversation with Niko. Use this to understand follow-up messages. If Niko says "change that", "actually make it...", "no the other one", etc. — look at recent messages to understand what he's referring to. Never ask him to repeat himself if the context is in the conversation history.
 
+IMPORTANT: The conversation history may be empty if the bot recently restarted. In that case, ALWAYS read today's personal daily note FIRST before responding — it contains what you recently wrote and gives you context for follow-ups. If Niko's message seems like a follow-up, READ THE DAILY NOTE before asking for clarification. Your recent writes to the vault ARE your memory.
+
 == TONE ==
 
 Casual, direct, like a sharp friend who remembers everything. Brief replies but never skip the cross-reference check. If you catch something Niko forgot, say it plainly: "Heads up — [context]. Still want to go ahead?"`;
@@ -924,7 +926,26 @@ async function processWithClaude(userMessage, userId) {
   // Load conversation history (24h rolling window)
   const conv = userId ? getConversation(userId) : { messages: [], lastActivity: Date.now() };
   log("info", `Conversation history: ${conv.messages.length} messages for user ${userId}`);
-  const messages = [...conv.messages, { role: "user", content: userMessage }];
+
+  // If no conversation history, pre-load today's daily note as context
+  // so the bot can understand follow-ups even after a restart
+  let contextPrefix = "";
+  if (conv.messages.length === 0) {
+    try {
+      const dailyNote = isCloudMode
+        ? await githubGetFile(dailyNotePath.replace(VAULT_PATH + "/", ""))
+        : await fs.readFile(dailyNotePath, "utf-8");
+      if (dailyNote) {
+        const noteContent = isCloudMode ? dailyNote.content : dailyNote;
+        contextPrefix = `[CONTEXT — today's personal daily note, for follow-up context:]\n${noteContent}\n\n[Niko's message:] `;
+        log("info", "Pre-loaded daily note as conversation context");
+      }
+    } catch (err) {
+      log("info", "Could not pre-load daily note", { error: err.message });
+    }
+  }
+
+  const messages = [...conv.messages, { role: "user", content: contextPrefix + userMessage }];
 
   // Tool-use loop: Claude may call tools, we execute them and feed results back
   let response = await anthropic.messages.create({
