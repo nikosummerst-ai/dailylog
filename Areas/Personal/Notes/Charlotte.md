@@ -65,6 +65,11 @@ Niko and Charlotte have a shared thing with **capybaras** — it's their symbol 
 - Has **epilepsy**
 - Requires medication **twice daily: 10am and 10pm**
 - Dosage/timing subject to change depending on how she responds to treatment
+- ⚠️ **Away planning flag:** Whenever Niko and [[Charlotte]] go away (e.g. [[Mum and Dads Wedding]], [[Orlando Trip]]), Luna's care needs to be arranged in advance
+  - Option 1: **Cattery nearby** — they've used one before, works well for general stays
+  - Option 2: **Someone coming in** — possible for daytime but the **10pm medication is the hard problem** — very late for someone to come in, and cattery would cover it automatically
+  - ⚠️ If no one can do the 10pm dose, cattery is probably the only viable option
+  - Flag this early whenever a multi-day trip is being planned
 
 ## Recent Context
 - 2026-04-15: Moving Meep's stuff from [[Christopher]]'s to Niko's storage container on Sat 18 Apr. Also picking up a bed. Van hire needed.
