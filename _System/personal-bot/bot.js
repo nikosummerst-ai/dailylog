@@ -1646,8 +1646,22 @@ async function main() {
   scheduleDailyBriefings();
 
   log("info", "Starting personal bot...");
-  await bot.launch();
-  log("info", "Bot is running. Waiting for messages...");
+
+  // Retry launch with delay — handles 409 conflict during Railway blue-green deploys
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    try {
+      await bot.launch({ dropPendingUpdates: true });
+      log("info", "Bot is running. Waiting for messages...");
+      break;
+    } catch (err) {
+      if (err.response?.error_code === 409 && attempt < 5) {
+        log("info", `Launch attempt ${attempt} got 409 (old instance still running), retrying in ${attempt * 3}s...`);
+        await new Promise(r => setTimeout(r, attempt * 3000));
+      } else {
+        throw err;
+      }
+    }
+  }
 }
 
 main().catch((err) => {
