@@ -80,7 +80,7 @@ async function githubWriteFile(filePath, content, message) {
   const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`;
   const existing = await githubGetFile(filePath);
   const body = {
-    message: message || `bot: update ${filePath}`,
+    message: (message || `bot: update ${filePath}`) + " [skip deploy]",
     content: Buffer.from(content).toString("base64"),
   };
   if (existing) body.sha = existing.sha;
