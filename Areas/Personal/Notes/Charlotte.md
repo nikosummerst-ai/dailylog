@@ -74,6 +74,7 @@ Niko and Charlotte have a shared thing with **capybaras** — it's their symbol 
 ## Recent Context
 - 2026-04-15: Moving Meep's stuff from [[Christopher]]'s to Niko's storage container on Sat 18 Apr. Also picking up a bed. Van hire needed.
 - 2026-04-16: Crocs reordered (cream pair). Current pair to be sent back — return label needed before Sunday drop-off.
+- 2026-04-16: [[Charlotte]] asked to do lunch on Sunday 20 Apr at 1pm. Also reminded Niko about the Crocs return.
 
 ## Upcoming
 - House viewings ongoing — see [[House Checker]]
