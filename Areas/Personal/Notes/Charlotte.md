@@ -9,7 +9,7 @@ created: 2026-04-15
 Niko's partner.
 
 ## Important Dates
-- 
+- 🎂 Birthday: 1st April
 
 ## Gift History
 - 
