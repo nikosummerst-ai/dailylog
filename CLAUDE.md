@@ -3,6 +3,12 @@
 ## Who I Am
 Niko Summers — AI & Automation Specialist at Triptease (London).
 I build marketing automations, AI-powered tools, and content systems for the hospitality industry.
+- Partner: Charlotte (also called Meep). Brother: Christopher.
+- Moving Meep's stuff from Christopher's to storage on Sat Apr 18. Need van hire. Also picking up a bed.
+- Mum & Dad's wedding coming up — May 9 deadline mentioned in backlog.
+- House hunting active (House Checker project).
+- Personal Telegram bot: t.me/nikodailyreminders_bot (Railway, dailylog-production-3114.up.railway.app)
+- GitHub PAT needed for pushes: generate at https://github.com/settings/tokens (repo scope, classic)
 
 ## Vault Structure
 - `Areas/` — Business areas and personal. Each has `_context/` (canonical docs), `Projects/`, `Content/`, `Notes/`
