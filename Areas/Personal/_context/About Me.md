@@ -13,7 +13,10 @@ Niko Summers
 ## Key People
 - [[Charlotte]] — partner (also known as Meep)
 - Mum & Dad — wedding coming up
+- [[Carla]] — Niko's auntie
+- [[Steve]] — Niko's uncle (Carla's husband)
 
 ## Current Life Stuff
 - House hunting (see [[House Checker]])
 - Mum & Dad's wedding planning
+- Lives with parents — can do own thing when family visit
