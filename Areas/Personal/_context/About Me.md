@@ -6,8 +6,8 @@ last-updated: 2026-04-15
 # About Me
 
 Niko Summers
-- Location: London, UK
-- Work: AI & Automation Specialist at Triptease
+- Location: Norden, Rochdale
+- Work: AI & Automation Specialist at Triptease in London, work from home
 - Partner: Charlotte (Meep)
 
 ## Key People

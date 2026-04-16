@@ -3,7 +3,7 @@
 ## Who I Am
 Niko Summers — AI & Automation Specialist at Triptease (London).
 I build marketing automations, AI-powered tools, and content systems for the hospitality industry.
-- Partner: Charlotte (also called Meep). Brother: Christopher.
+- Partner: Charlotte (also called Meep). Christopher is Charlotte's brother.
 - Moving Meep's stuff from Christopher's to storage on Sat Apr 18. Need van hire. Also picking up a bed.
 - Mum & Dad's wedding coming up — May 9 deadline mentioned in backlog.
 - House hunting active (House Checker project).

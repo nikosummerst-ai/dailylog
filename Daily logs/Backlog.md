@@ -29,20 +29,20 @@ last-updated: 2026-04-16
 ## Active Action Items
 
 ### [[Guest Personas]]
-- [ ] Set up dashboard for persona selection process
+- [x] Set up dashboard for persona selection process
 - [ ] Filter selected personas and add QR codes
 - [ ] Generate 5 test reports using 3-persona format
 - [ ] Extract top-performing persona patterns (niche, volume, revenue impact)
 - [ ] Research personalized QR codes for each report
-- [ ] Build CSV export capability (deadline: May 7)
-- [ ] Provide bulk enrichment via CSV for AI SDR campaigns
-- [ ] Release CSV upload and remove guardrails for persona selection
+- [x] Build CSV export capability (deadline: May 7)
+- [x] Provide bulk enrichment via CSV for AI SDR campaigns
+- [x] Release CSV upload and remove guardrails for persona selection
 - [ ] Consider appending outbound email summary to dashboard
 - [ ] Respond to [[Alex Mortensen]] re: persona weighting/percentages per hotel
-- [ ] Check [[Darrin Spiesz]] issue — can no longer edit/customize reports before PDF generation
-- [ ] Multi-language support (Spanish first) — requested by [[Larry Hogan]]
+- [x] Check [[Darrin Spiesz]] issue — can no longer edit/customize reports before PDF generation
+- [x] Multi-language support (Spanish first) — requested by [[Larry Hogan]]
 - [ ] Record step-by-step video for clients once dashboard is live
-- [ ] Address [[George Bettley]]'s request for central feedback storage
+- [x] Address [[George Bettley]]'s request for central feedback storage
 
 ### [[Help Centre Bot]] — PAUSED (~2 weeks, revisit end of April)
 - [ ] Update scan window to past 1-2 weeks only (not pulling old articles)
