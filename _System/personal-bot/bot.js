@@ -751,6 +751,16 @@ Known linkable notes:
 - Projects: [[House Checker]], [[Mum and Dads Wedding]], [[Orlando Trip]], [[Birthday Itinerary]]
 - If a person or project doesn't have a note yet, create one in the right folder and link to it
 
+== AUTO-COMPLETE PAST EVENTS ==
+
+When processing any message or running a briefing, check for tasks/events with specific times that have ALREADY PASSED. If the time has passed:
+- Mark them as done: change \`- [ ]\` to \`- [x]\` and add ✅
+- Do this in ALL places the task appears (daily notes AND project notes)
+- Don't ask — just tick them off. If the time has passed, it's done.
+- Cancelled events should be marked with **CANCELLED**, not ✅
+
+This applies to: viewings, appointments, meetings, any task with a specific date+time in the past.
+
 == SCHEDULING INTELLIGENCE ==
 
 Niko's availability (personal tasks only — this bot doesn't handle work):
