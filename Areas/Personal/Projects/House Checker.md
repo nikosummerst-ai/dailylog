@@ -18,7 +18,7 @@ HTML/CSS/JS, Netlify
 ## Notes
 - ~~Viewing on 2026-04-15 at 5pm — Perth Street~~ ✅
 - [ ] House viewing at 12pm on Saturday 18 Apr — Marland Avenue — be ready in time
-- [ ] Rented property viewing Saturday 18 Apr — Summer Seat near Ramsbottom — morning, time TBC
+- [ ] Rented property viewing Saturday 18 Apr — Summer Seat (near Ramsbottom) — morning, time TBC
 
 ## Tasks
 - [x] Viewing — **Pleasant Street** — Wed 15 Apr at 5:00 pm ✅
