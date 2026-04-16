@@ -50,8 +50,8 @@ These are the single source of truth. When something changes, update the file in
 ### Repository
 - **GitHub**: https://github.com/nikosummerst-ai/dailylog.git (Niko's personal GitHub account)
 - Local git uses Triptease SSH key (`nikosummers-sudo`), which can't push to the personal repo
-- **To push**: use token auth — `git push https://<GITHUB_PAT>@github.com/nikosummerst-ai/dailylog.git main`
-- Generate classic PATs at: https://github.com/settings/tokens (needs `repo` scope)
+- **To push**: `git push origin main` — PAT is stored in the remote URL (run `git remote get-url origin` to verify)
+- If PAT expires, generate a new classic PAT at https://github.com/settings/tokens (needs `repo` scope) and update with: `git remote set-url origin https://<NEW_PAT>@github.com/nikosummerst-ai/dailylog.git`
 - `.gitignore` excludes: `.obsidian/`, `.claude/`, `.env`, `node_modules/`
 
 ### Personal Telegram Bot (Railway)
@@ -67,7 +67,7 @@ These are the single source of truth. When something changes, update the file in
 ### To deploy changes to the bot:
 1. Edit `_System/personal-bot/bot.js`
 2. `git add -A && git commit -m "description"`
-3. `git push https://<GITHUB_PAT>@github.com/nikosummerst-ai/dailylog.git main`
+3. `git push origin main` (PAT is stored in the remote URL)
 4. Railway auto-redeploys
 
 ### Local Launch Agents (macOS)

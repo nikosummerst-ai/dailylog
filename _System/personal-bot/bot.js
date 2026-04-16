@@ -1250,8 +1250,9 @@ async function sendDailyBriefing() {
       recentDays.push(`Daily logs/${iso}-personal.md`);
     }
 
-    // Only personal files — no work daily notes, no work backlog
-    const filesToRead = [personalDailyPath, charlottePath, aboutMePath, ...recentDays];
+    // Personal files + Backlog (has deadlines and tasks with dates)
+    const backlogPath = "Daily logs/Backlog.md";
+    const filesToRead = [personalDailyPath, charlottePath, aboutMePath, backlogPath, ...recentDays];
     const context = [];
 
     for (const filePath of filesToRead) {
@@ -1334,14 +1335,15 @@ ${context.join("\n\n")}
 
 Create a SHORT, focused briefing covering ONLY:
 
-1. **Today** — events, plans, appointments happening TODAY with times. If nothing, say "Clear day."
+1. **Today** — events, plans, viewings, appointments happening TODAY with times. If nothing, say "Clear day."
 2. **Charlotte / Meep** — only if something involves her today or needs a decision this week.
-3. **This week** — things with ACTUAL DATES in the next 7 days that Niko should prepare for. Nothing further out than 7 days. Do NOT mention projects or tasks that don't have a specific date.
+3. **This week** — things with ACTUAL DATES in the next 7 days that Niko should prepare for. Check the Backlog deadlines table and project task lists for dated items. Also include anything marked URGENT or ASAP. Nothing further out than 7 days unless marked ASAP/URGENT.
 
 RULES:
-- ONLY include items with real dates or deadlines. No project status updates. No "active projects" list.
+- Scan the Backlog deadlines table and all project notes for tasks with dates in the next 7 days.
+- Include ASAP/URGENT tasks regardless of date.
 - Past events today: skip, they're done.
-- Maximum 7-day lookahead. Nothing further out.
+- No project status updates. No "active projects" list. Only surface specific tasks with dates or urgency.
 - Keep it casual, short, scannable. Skip empty sections entirely.
 - Don't make stuff up — only report what's in the notes.`;
 
