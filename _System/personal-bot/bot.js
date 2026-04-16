@@ -847,6 +847,7 @@ async function processWithClaude(userMessage, userId) {
 
   // Load conversation history (24h rolling window)
   const conv = userId ? getConversation(userId) : { messages: [], lastActivity: Date.now() };
+  log("info", `Conversation history: ${conv.messages.length} messages for user ${userId}`);
   const messages = [...conv.messages, { role: "user", content: userMessage }];
 
   // Tool-use loop: Claude may call tools, we execute them and feed results back
@@ -893,6 +894,7 @@ async function processWithClaude(userMessage, userId) {
     conv.messages = messages;
     conv.lastActivity = Date.now();
     trimConversation(conv);
+    log("info", `Conversation saved: ${conv.messages.length} messages for user ${userId}`);
   }
 
   // Extract the final text response
