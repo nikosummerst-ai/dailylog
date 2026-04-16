@@ -14,5 +14,8 @@ Hotel geolocation checker tool.
 > [!info] LOW PRIORITY
 > Not urgent. Needs to be integrated into the [[Automation Hub]] eventually, but not a pressing concern.
 
+## Tech Stack
+- Details TBD — to be integrated into [[Automation Hub]]
+
 ## Next Steps
 - [ ] Integrate into the [[Automation Hub]] dashboard (when time permits)

@@ -33,7 +33,8 @@ Autonomous search with 6-signal coverage.
 - Brand compliance checker: paste any copy, check against [[Brand Voice and Style Guide]]
 
 ## Tech Stack
-Claude API (claude-sonnet-4), React 18, Railway hosting
+- [[Claude API]] — claude-sonnet-4, brand compliance checking, content generation (style + persona layers)
+- [[Railway]] — hosting
 
 ## Related
 - [[Brand Voice and Style Guide]]

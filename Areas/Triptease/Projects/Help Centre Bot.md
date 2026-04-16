@@ -17,6 +17,16 @@ Detects stale/deprecated Intercom help centre articles by comparing against rele
 ## Stack
 pnpm monorepo, Slack Bolt, Prisma, Claude API, Notion API, Railway
 
+## Tech Stack
+- [[Claude API]] — content gap detection, article update proposals, sunset verification
+- [[Slack]] — bot notifications, review modals, weekly summary
+- [[Notion]] — release notes + drafts database reading
+- [[Intercom]] — help centre article sync
+- [[PostgreSQL]] — content items, articles, evidence, scan state (shared DB with [[Automation Hub]])
+- [[Prisma]] — ORM for database access
+- [[Railway]] — bot + worker services
+- [[GitHub]] — Triptease-Mktg/help-centre-bot.git
+
 ## Deployment
 - **GitHub**: https://github.com/Triptease-Mktg/help-centre-bot.git
 - **Railway Bot**: https://bot-production-c3c5.up.railway.app
@@ -33,3 +43,6 @@ pnpm monorepo, Slack Bolt, Prisma, Claude API, Notion API, Railway
 
 ## Links
 - Code: ~/Desktop/ClaudeProjects/Help Centre
+
+## Project Intelligence
+- CLAUDE.md: ~/Desktop/ClaudeProjects/Help Centre/CLAUDE.md

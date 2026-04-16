@@ -1,3 +1,5 @@
+@~/Desktop/ClaudeProjects/Obsidian/CLAUDE.md
+
 # Personal Telegram Bot
 
 Telegram bot that writes to the Obsidian vault for personal life tracking.

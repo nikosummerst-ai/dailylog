@@ -28,6 +28,13 @@ Related: [[Guest Personas]], [[2026-03-27 CRM Guest Personas]]
 ## Architecture
 Daily automation: BigQuery extraction -> match CRM via booking references -> push to CRM UDF fields
 
+## Tech Stack
+- [[Google BigQuery]] — daily reservation data extraction
+- [[n8n]] — workflow orchestration (BQ → S3 → matching)
+- [[Revenate]] — CRM platform (Boardwalk Aruba, Evans Hotels)
+- [[AWS S3]] — daily CSV exchange between n8n and matching service
+- [[Claude API]] — guest-to-persona matching (Phase 2)
+
 ## Key People
 - [[Liam]] — has been asking about production readiness; created BigQuery workflow + N8N framework
 - [[Tobias Gunkel]] — prioritization discussions

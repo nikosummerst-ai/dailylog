@@ -18,6 +18,14 @@ Account-based marketing campaign automation for hotel targeting via Beeswax DSP.
 ## Stack
 Node.js, Express, Beeswax API, Railway
 
+## Tech Stack
+- [[Claude API]] — campaign copy generation
+- [[Beeswax DSP]] — programmatic advertising, campaign management
+- [[HubSpot]] — website segment tagger (footer script)
+- [[Slack]] — campaign creation modals, notifications
+- [[Railway]] — abm-creator + beeswax-pipeline services
+- [[GitHub]] — Triptease-Mktg/abm-creator.git
+
 ## Deployment
 - **GitHub**: https://github.com/Triptease-Mktg/abm-creator.git
 - **Railway (prod)**: https://abm-creator-production.up.railway.app
@@ -30,3 +38,6 @@ Node.js, Express, Beeswax API, Railway
 
 ## Links
 - Code: ~/Desktop/ClaudeProjects/Beeswax
+
+## Project Intelligence
+- CLAUDE.md: ~/Desktop/ClaudeProjects/Beeswax/CLAUDE.md
