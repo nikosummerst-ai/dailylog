@@ -12,7 +12,7 @@ Niko's partner.
 - 🎂 Birthday: 1st April
 
 ## Gift History
-- 
+- 2026-04: Niko bought [[Charlotte]] Crocs for her birthday — wrong colour, being returned for exchange
 
 ## Likes & Interests
 - 
