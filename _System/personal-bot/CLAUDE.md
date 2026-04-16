@@ -1,4 +1,24 @@
-@~/Desktop/ClaudeProjects/Obsidian/CLAUDE.md
+# Vault Context
+# Niko's Obsidian vault at ~/Desktop/ClaudeProjects/Obsidian is the single source of truth
+# for all project context, tools, brand info, and org knowledge.
+# DO NOT read vault files unless the task requires it. Use QMD for search.
+#
+# Key paths:
+# - Tools: Areas/Triptease/_context/Tools/ (63 tool notes)
+# - Tools Index: Areas/Triptease/_context/Tools Index.md
+# - Projects: Areas/Triptease/Projects/ (12 project notes with Tech Stack + CLAUDE.md paths)
+# - Brand: Areas/Triptease/_context/Brand Voice and Style Guide.md
+# - Product: Areas/Triptease/_context/Product Reference.md
+# - Automation Stack: Areas/Triptease/_context/Automation Stack.md
+#
+# When to check the vault (do this proactively, don't wait to be asked):
+# - Planning a new feature/automation → read Tools Index for available tools
+# - Starting a new project → read Areas/Triptease/Projects/ for similar patterns
+# - Choosing a tech stack → read relevant tool notes for how we already use them
+# - Writing content for Triptease → read Brand Voice and Style Guide
+#
+# Search: Use QMD MCP (query tool) for concept search, or read files directly by path.
+# Each project note has a ## Project Intelligence section with CLAUDE.md paths for deep dives.
 
 # Personal Telegram Bot
 
