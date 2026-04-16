@@ -23,6 +23,6 @@ HTML/CSS/JS, Netlify
 ## Tasks
 - [x] Viewing — **Pleasant Street** — Wed 15 Apr at 5:00 pm ✅
 - [x] Viewing — **Sandiway** — Thu 16 Apr at 11:15 am *(Niko solo viewing)* — **CANCELLED**
-- [x] Viewing — **Miller Street** — Thu 16 Apr at 5:00 pm ✅
+- [ ] Viewing — **Miller Street** — Thu 16 Apr at 5:00 pm
 - [ ] Viewing — **Marland Avenue** — Sat 18 Apr at 12:00 pm
 - [ ] Viewing — **Peers Street** — Tue 21 Apr at 5:15 pm
