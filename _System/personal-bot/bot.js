@@ -106,11 +106,15 @@ const KNOWN_NOTES = {
   house: path.join(VAULT_PATH, "Areas/Personal/Projects/House Checker.md"),
 };
 
-// Allowed Telegram user ID — set in .env to restrict access to Niko only.
-// Leave blank during development to allow all users.
+// Allowed Telegram user ID — REQUIRED in production for privacy.
+// Bot silently ignores messages from anyone else.
 const ALLOWED_USER_ID = process.env.TELEGRAM_USER_ID
   ? Number(process.env.TELEGRAM_USER_ID)
   : null;
+
+if (!ALLOWED_USER_ID) {
+  log("warn", "TELEGRAM_USER_ID not set — bot will accept messages from ALL users. Set this in production!");
+}
 
 // ---------------------------------------------------------------------------
 // Clients
@@ -138,6 +142,46 @@ function isAuthorised(ctx) {
   if (!ALLOWED_USER_ID) return true;
   return ctx.from?.id === ALLOWED_USER_ID;
 }
+
+// ---------------------------------------------------------------------------
+// Conversation memory — 24h rolling window for follow-up messages
+// ---------------------------------------------------------------------------
+
+const conversationStore = new Map();
+const CONVERSATION_TTL_MS = 24 * 60 * 60 * 1000;
+const MAX_HISTORY_MESSAGES = 40; // ~10-20 turns depending on tool use
+
+function getConversation(userId) {
+  const now = Date.now();
+  const conv = conversationStore.get(userId);
+  if (!conv || now - conv.lastActivity > CONVERSATION_TTL_MS) {
+    const fresh = { messages: [], lastActivity: now };
+    conversationStore.set(userId, fresh);
+    return fresh;
+  }
+  conv.lastActivity = now;
+  return conv;
+}
+
+function trimConversation(conv) {
+  while (conv.messages.length > MAX_HISTORY_MESSAGES) {
+    conv.messages.shift();
+    // Ensure first message is always role: user (Claude API requirement)
+    while (conv.messages.length > 0 && conv.messages[0].role !== "user") {
+      conv.messages.shift();
+    }
+  }
+}
+
+// Clean up expired conversations every hour
+setInterval(() => {
+  const now = Date.now();
+  for (const [userId, conv] of conversationStore) {
+    if (now - conv.lastActivity > CONVERSATION_TTL_MS) {
+      conversationStore.delete(userId);
+    }
+  }
+}, 60 * 60 * 1000);
 
 // ---------------------------------------------------------------------------
 // Date helpers
@@ -787,17 +831,23 @@ New person: ${VAULT_PATH}/Areas/Personal/Notes/[Name].md (use template above)
 
 Always use [[wikilinks]] to connect: [[Charlotte]], [[House Checker]], [[Mum and Dads Wedding]], etc.
 
+== CONVERSATION MEMORY ==
+
+You have access to the last 24 hours of conversation with Niko. Use this to understand follow-up messages. If Niko says "change that", "actually make it...", "no the other one", etc. — look at recent messages to understand what he's referring to. Never ask him to repeat himself if the context is in the conversation history.
+
 == TONE ==
 
 Casual, direct, like a sharp friend who remembers everything. Brief replies but never skip the cross-reference check. If you catch something Niko forgot, say it plainly: "Heads up — [context]. Still want to go ahead?"`;
 }
 
-async function processWithClaude(userMessage) {
+async function processWithClaude(userMessage, userId) {
   const dailyNotePath = await ensurePersonalDailyNote();
 
   const systemPrompt = buildSystemPrompt(dailyNotePath);
 
-  const messages = [{ role: "user", content: userMessage }];
+  // Load conversation history (24h rolling window)
+  const conv = userId ? getConversation(userId) : { messages: [], lastActivity: Date.now() };
+  const messages = [...conv.messages, { role: "user", content: userMessage }];
 
   // Tool-use loop: Claude may call tools, we execute them and feed results back
   let response = await anthropic.messages.create({
@@ -837,17 +887,27 @@ async function processWithClaude(userMessage) {
     });
   }
 
+  // Save conversation history (including final assistant response)
+  messages.push({ role: "assistant", content: response.content });
+  if (userId) {
+    conv.messages = messages;
+    conv.lastActivity = Date.now();
+    trimConversation(conv);
+  }
+
   // Extract the final text response
   const textBlocks = response.content.filter((b) => b.type === "text");
   return textBlocks.map((b) => b.text).join("\n") || "Done.";
 }
 
-async function processWithClaudeMultimodal(userContent) {
+async function processWithClaudeMultimodal(userContent, userId) {
   const dailyNotePath = await ensurePersonalDailyNote();
 
   const systemPrompt = buildSystemPrompt(dailyNotePath);
 
-  const messages = [{ role: "user", content: userContent }];
+  // Load conversation history (24h rolling window)
+  const conv = userId ? getConversation(userId) : { messages: [], lastActivity: Date.now() };
+  const messages = [...conv.messages, { role: "user", content: userContent }];
 
   let response = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
@@ -883,6 +943,14 @@ async function processWithClaudeMultimodal(userContent) {
       tools: TOOLS,
       messages,
     });
+  }
+
+  // Save conversation history
+  messages.push({ role: "assistant", content: response.content });
+  if (userId) {
+    conv.messages = messages;
+    conv.lastActivity = Date.now();
+    trimConversation(conv);
   }
 
   const textBlocks = response.content.filter((b) => b.type === "text");
@@ -975,7 +1043,7 @@ bot.on("text", async (ctx) => {
   await enqueue(async () => {
     try {
       await ctx.sendChatAction("typing");
-      const reply = await processWithClaude(text);
+      const reply = await processWithClaude(text, ctx.from.id);
       await ctx.reply(cleanForTelegram(reply));
     } catch (err) {
       log("error", "Failed to process text message", {
@@ -1003,7 +1071,7 @@ bot.on("voice", async (ctx) => {
       const transcription = await transcribeVoice(ctx);
 
       await ctx.sendChatAction("typing");
-      const reply = await processWithClaude(transcription);
+      const reply = await processWithClaude(transcription, ctx.from.id);
       await ctx.reply(cleanForTelegram(reply));
     } catch (err) {
       log("error", "Failed to process voice message", {
@@ -1046,7 +1114,7 @@ bot.on("photo", async (ctx) => {
         userContent.push({ type: "text", text: "I'm sending you a photo. Describe what you see and ask me what I'd like to do with it \u2014 save it as a note, add it to a project, etc." });
       }
 
-      const reply = await processWithClaudeMultimodal(userContent);
+      const reply = await processWithClaudeMultimodal(userContent, ctx.from.id);
       await ctx.reply(cleanForTelegram(reply));
     } catch (err) {
       log("error", "Failed to process photo", { error: err.message, stack: err.stack });
@@ -1078,12 +1146,12 @@ bot.on("document", async (ctx) => {
         { type: "image", source: { type: "base64", media_type: doc.mime_type, data: base64 } },
         { type: "text", text: caption || `Document: ${doc.file_name}. What should I do with this?` },
       ];
-      const reply = await processWithClaudeMultimodal(userContent);
+      const reply = await processWithClaudeMultimodal(userContent, ctx.from.id);
       await ctx.reply(cleanForTelegram(reply));
     } else {
       // For non-image docs, just note the file name and caption
       const text = `I received a document: ${doc.file_name} (${doc.mime_type}). ${caption}`;
-      const reply = await processWithClaude(text);
+      const reply = await processWithClaude(text, ctx.from.id);
       await ctx.reply(cleanForTelegram(reply));
     }
   } catch (err) {
@@ -1259,28 +1327,23 @@ async function sendDailyBriefing() {
       }
     } catch {}
 
-    const briefingPrompt = `You are Niko's PERSONAL morning briefing assistant. It's ${todayHuman()}. This is strictly about his personal life — NOT work. No meetings, no Triptease, no Slack, no projects from work. Only personal stuff.
+    const briefingPrompt = `You are Niko's PERSONAL morning briefing assistant. It's ${todayHuman()}. Personal life only — NO work, Triptease, Slack, or work projects.
 
 VAULT CONTENTS:
 ${context.join("\n\n")}
 
-Create a briefing covering:
+Create a SHORT, focused briefing covering ONLY:
 
-1. What's on today — events, viewings, plans, appointments. Include times.
-2. Charlotte / Meep — anything involving her today or this week, things to remember
-3. Active projects — quick status on house hunt, wedding, trips, anything else active
-4. Things to remember — upcoming birthdays, deadlines, stuff that's easy to forget
-5. Open requests — things people asked Niko to do that DON'T have a specific time attached (like "pick up milk"). Only include if they're from the last 2 days and haven't been marked done. If it's been more than 2 days, drop it.
-6. Heads up — anything coming up in the next few days you should be aware of
+1. **Today** — events, plans, appointments happening TODAY with times. If nothing, say "Clear day."
+2. **Charlotte / Meep** — only if something involves her today or needs a decision this week.
+3. **This week** — things with ACTUAL DATES in the next 7 days that Niko should prepare for. Nothing further out than 7 days. Do NOT mention projects or tasks that don't have a specific date.
 
-IMPORTANT RULES:
-- Events with a specific time that has ALREADY PASSED: assume Niko did it. Don't remind him. Don't ask. It's done.
-- Events with a specific time coming up TODAY: remind him with the time.
-- Open-ended tasks from people (no specific time): mention once the next day. If still not done after 2 days, drop it — Niko either did it or decided not to.
-- Never nag. One reminder is enough.
-- Keep it casual and brief. Skip empty sections.
-- Don't make stuff up — only report what's actually in the notes.
-- If the vault is mostly empty, say so and suggest things Niko could start tracking.`;
+RULES:
+- ONLY include items with real dates or deadlines. No project status updates. No "active projects" list.
+- Past events today: skip, they're done.
+- Maximum 7-day lookahead. Nothing further out.
+- Keep it casual, short, scannable. Skip empty sections entirely.
+- Don't make stuff up — only report what's in the notes.`;
 
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
