@@ -729,6 +729,8 @@ Examples of what to auto-log (no questions asked):
 - "Need to get a haircut next week" → add to the relevant day if specified, or this week's notes
 - "Christopher's stuff needs moving Sunday" → create Sunday note, add task
 
+IMPORTANT: When updating a plan (time change, cancellation, new detail), update it in ALL places — daily note AND project note AND Backlog if applicable. Search for the item across notes and update every occurrence. Never leave stale info in one place while updating another.
+
 == LINKING — BUILD THE NETWORK ==
 
 EVERY note you write MUST use [[wikilinks]] to connect to related people, projects, and notes. This is critical — it builds Niko's knowledge graph in Obsidian.
