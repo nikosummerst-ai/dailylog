@@ -1298,19 +1298,11 @@ const webhookServer = createServer(async (req, res) => {
           const reply = await processWithClaude(prompt);
           log("info", "WhatsApp processed", { sender, reply: reply.slice(0, 100) });
 
-          // Always log the result, notify Telegram for actionable items
+          // Log result silently — no Telegram notification for WhatsApp imports
           if (reply.toLowerCase().includes("nothing to log")) {
             log("info", "WhatsApp: nothing to log", { sender });
           } else {
             log("info", "WhatsApp: logged content", { sender, reply: reply.slice(0, 200) });
-            try {
-              await bot.telegram.sendMessage(
-                process.env.TELEGRAM_USER_ID,
-                cleanForTelegram(`[${app}: ${sender}] ${reply}`)
-              );
-            } catch (err) {
-              log("error", "Failed to send Telegram notification", { error: err.message });
-            }
           }
         });
 
