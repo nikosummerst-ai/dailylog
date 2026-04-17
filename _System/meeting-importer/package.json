@@ -1,0 +1,15 @@
+{
+  "name": "meeting-importer",
+  "version": "1.0.0",
+  "description": "Polls Notion for meeting notes and writes them to Obsidian vault via GitHub API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.2.0",
+    "express": "^4.21.0",
+    "node-cron": "^3.0.3"
+  }
+}

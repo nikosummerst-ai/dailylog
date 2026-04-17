@@ -3,4 +3,6 @@
 .claude/
 _System/personal-bot/.env
 _System/personal-bot/node_modules/
+_System/meeting-importer/.env
+_System/meeting-importer/node_modules/
 .trash/
