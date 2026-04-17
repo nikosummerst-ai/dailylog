@@ -26,3 +26,4 @@ HTML/CSS/JS, Netlify
 - [ ] Viewing — **Miller Street** — Thu 16 Apr at 5:00 pm
 - [ ] Viewing — **Marland Avenue** — Sat 18 Apr at 12:00 pm
 - [ ] Viewing — **Peers Street** — Tue 21 Apr at 5:15 pm
+- [ ] Viewing — **20 Birchwood Road, Middleton, M24 2FX** — Sun/Mon 20 Apr at 1:45 pm *(confirmation says "Monday" — confirm day with agent)*
