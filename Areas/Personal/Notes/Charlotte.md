@@ -63,8 +63,20 @@ Niko and Charlotte have a shared thing with **capybaras** — it's their symbol 
 
 ## Luna (Charlotte's Cat) 🐱
 - Has **epilepsy**
-- Requires medication **twice daily: 10am and 10pm**
-- Dosage/timing subject to change depending on how she responds to treatment
+- On a reducing course of **Levetiracetam 100mg/ml oral solution**
+
+### 💊 Medication Schedule
+| Week | Dates | Dose | Frequency |
+|------|-------|------|-----------|
+| Week 1 | Before 17 Apr | 2ml | Twice daily (10am + 10pm) |
+| Week 2 ✅ Current | **17 Apr – 23 Apr** | **1ml** | **Twice daily (10am + 10pm)** |
+| Week 3 | 24 Apr – 30 Apr | 1ml | Once daily (morning only) |
+| Week 4 | From 1 May | — | **STOP** |
+
+### ⚠️ Upcoming Reduction Reminders
+- **Fri 24 Apr** → Drop to **1ml once daily (morning only)**
+- **Fri 1 May** → **Stop medication entirely**
+
 - ⚠️ **Away planning flag:** Whenever Niko and [[Charlotte]] go away (e.g. [[Mum and Dads Wedding]], [[Orlando Trip]]), Luna's care needs to be arranged in advance
   - Option 1: **Cattery nearby** — they've used one before, works well for general stays
   - Option 2: **Someone coming in** — possible for daytime but the **10pm medication is the hard problem** — very late for someone to come in, and cattery would cover it automatically
