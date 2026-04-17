@@ -17,7 +17,7 @@ I build marketing automations, AI-powered tools, and content systems for the hos
 - `Daily logs/` — One note per day + pinned Backlog
 - `Meeting Notes/` — Meeting transcripts and summaries
 - `Notes/` — Evergreen reference notes (SOPs, research, ideas)
-- `_System/` — Templates and attachments (don't modify)
+- `_System/` — Templates, attachments, and bot code (personal-bot/, meeting-importer/)
 
 ## The _context/ Pattern
 Each area's `_context/` folder holds canonical docs about that business/domain.
@@ -52,7 +52,7 @@ These are the single source of truth. When something changes, update the file in
 - Local git uses Triptease SSH key (`nikosummers-sudo`), which can't push to the personal repo
 - **To push**: `git push origin main` — PAT is stored in the remote URL (run `git remote get-url origin` to verify)
 - If PAT expires, generate a new classic PAT at https://github.com/settings/tokens (needs `repo` scope) and update with: `git remote set-url origin https://<NEW_PAT>@github.com/nikosummerst-ai/dailylog.git`
-- `.gitignore` excludes: `.obsidian/`, `.claude/`, `.env`, `node_modules/`
+- `.gitignore` excludes: `.obsidian/`, `.claude/`, `.env`, `_System/*/node_modules/`
 
 ### Personal Telegram Bot (Railway)
 - **Code**: `_System/personal-bot/` (bot.js, Dockerfile, railway.toml)
@@ -75,9 +75,18 @@ These are the single source of truth. When something changes, update the file in
 - **Personal bot (disabled)**: `~/Library/LaunchAgents/com.niko.personal-bot.plist` — unloaded since bot now runs on Railway
 
 ### Remote Scheduled Agents (Anthropic cloud, no laptop needed)
-- **Morning Briefing**: `trig_01AEbxhpzxKWSHTBSDch389g` — weekdays 9am BST → Slack DM. Reads Gmail, Calendar, Slack, Notion tasks. Includes procrastination detection and smart prioritization
-- **Meeting Note Importer**: `trig_01YU3rGDvyTg16JTpVDJ9LKk` — weekdays 6pm BST → Slack DM. Checks Notion for new meeting notes, summarizes them
+- **Morning Briefing**: `trig_01AEbxhpzxKWSHTBSDch389g` — weekdays 9am BST → Slack DM. Reads Gmail, Calendar, Slack, Notion tasks. Includes AI tool research via Reddit/X APIs.
+- **Meeting Note Importer**: `trig_01YU3rGDvyTg16JTpVDJ9LKk` — **DISABLED** (replaced by Railway service below)
 - Manage at: https://claude.ai/code/scheduled
+
+### Meeting Note Importer (Railway service)
+- **Code**: `_System/meeting-importer/` (index.js, Dockerfile, railway.toml)
+- Polls Notion every 5 min (9am-5pm BST, weekdays) for new meeting notes
+- No Claude API needed — uses Notion's built-in AI summaries, injects [[wikilinks]]
+- Writes directly to `Meeting Notes/` in vault via GitHub API
+- Railway env vars needed: `NOTION_API_KEY`, `GITHUB_TOKEN`, `GITHUB_REPO=nikosummerst-ai/dailylog`
+- Optional: `SLACK_BOT_TOKEN` (for DM on import), `CRON_SCHEDULE`, `LOOKBACK_MINUTES`
+- Health check: `GET /health` on the Railway service URL
 
 ### QMD Semantic Search
 - Collection: `obsidian` pointing at this vault
