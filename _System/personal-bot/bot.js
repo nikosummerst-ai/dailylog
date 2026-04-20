@@ -184,6 +184,84 @@ setInterval(() => {
 }, 60 * 60 * 1000);
 
 // ---------------------------------------------------------------------------
+// Conversation persistence — survive Railway redeploys
+// ---------------------------------------------------------------------------
+
+const CONVERSATION_STATE_REL_PATH = "_System/personal-bot/state/conversations.json";
+const CONVERSATION_STATE_LOCAL_PATH = path.join(__dirname, "state", "conversations.json");
+
+function serializeStore() {
+  const out = {};
+  for (const [userId, conv] of conversationStore) {
+    out[userId] = { messages: conv.messages, lastActivity: conv.lastActivity };
+  }
+  return JSON.stringify(out);
+}
+
+function hydrateStore(json) {
+  const data = JSON.parse(json);
+  conversationStore.clear();
+  const now = Date.now();
+  for (const [userIdStr, conv] of Object.entries(data)) {
+    if (!conv || now - (conv.lastActivity || 0) > CONVERSATION_TTL_MS) continue;
+    conversationStore.set(Number(userIdStr), {
+      messages: conv.messages || [],
+      lastActivity: conv.lastActivity || now,
+    });
+  }
+}
+
+async function loadConversationStore() {
+  try {
+    if (isCloudMode) {
+      const file = await githubGetFile(CONVERSATION_STATE_REL_PATH);
+      if (!file) {
+        log("info", "No conversation state in GitHub, starting fresh");
+        return;
+      }
+      hydrateStore(file.content);
+      log("info", `Loaded conversation state from GitHub (${conversationStore.size} users)`);
+    } else {
+      let content;
+      try {
+        content = await fs.readFile(CONVERSATION_STATE_LOCAL_PATH, "utf-8");
+      } catch (err) {
+        if (err.code === "ENOENT") {
+          log("info", "No conversation state on disk, starting fresh");
+          return;
+        }
+        throw err;
+      }
+      hydrateStore(content);
+      log("info", `Loaded conversation state from disk (${conversationStore.size} users)`);
+    }
+  } catch (err) {
+    log("error", "Failed to load conversation state — continuing with empty store", { error: err.message });
+  }
+}
+
+let persistInFlight = null;
+async function persistConversationStore() {
+  if (persistInFlight) return persistInFlight;
+  const snapshot = serializeStore();
+  persistInFlight = (async () => {
+    try {
+      if (isCloudMode) {
+        await githubWriteFile(CONVERSATION_STATE_REL_PATH, snapshot, "bot: persist conversation state");
+      } else {
+        await fs.mkdir(path.dirname(CONVERSATION_STATE_LOCAL_PATH), { recursive: true });
+        await fs.writeFile(CONVERSATION_STATE_LOCAL_PATH, snapshot, "utf-8");
+      }
+    } catch (err) {
+      log("error", "Failed to persist conversation state", { error: err.message });
+    } finally {
+      persistInFlight = null;
+    }
+  })();
+  return persistInFlight;
+}
+
+// ---------------------------------------------------------------------------
 // Date helpers
 // ---------------------------------------------------------------------------
 
@@ -994,6 +1072,7 @@ async function processWithClaude(userMessage, userId) {
     conv.lastActivity = Date.now();
     trimConversation(conv);
     log("info", `Conversation saved: ${conv.messages.length} messages for user ${userId}`);
+    await persistConversationStore();
   }
 
   // Extract the final text response
@@ -1052,6 +1131,7 @@ async function processWithClaudeMultimodal(userContent, userId) {
     conv.messages = messages;
     conv.lastActivity = Date.now();
     trimConversation(conv);
+    await persistConversationStore();
   }
 
   const textBlocks = response.content.filter((b) => b.type === "text");
@@ -1636,6 +1716,9 @@ async function main() {
     repo: isCloudMode ? GITHUB_REPO : undefined,
     vault: isCloudMode ? undefined : VAULT_PATH,
   });
+
+  // Restore conversation state (survives Railway redeploys)
+  await loadConversationStore();
 
   // Start webhook server
   webhookServer.listen(WEBHOOK_PORT, () => {
