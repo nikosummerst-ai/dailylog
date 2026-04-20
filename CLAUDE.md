@@ -74,17 +74,22 @@ These are the single source of truth. When something changes, update the file in
 - **QMD auto-embed**: `~/Library/LaunchAgents/com.qmd.auto-embed.plist` — runs `qmd update && qmd embed` at 12am and 12pm
 - **Personal bot (disabled)**: `~/Library/LaunchAgents/com.niko.personal-bot.plist` — unloaded since bot now runs on Railway
 
+### Obsidian Git Plugin (auto-sync)
+- **Plugin**: `obsidian-git` — installed in `.obsidian/plugins/obsidian-git/`
+- Auto-pulls from GitHub every **3 minutes** when Obsidian is open
+- Auto-pushes local changes every **5 minutes**
+- This is how bot commits (meeting notes, vault updates) appear in Obsidian automatically
+- No manual `git pull` needed while Obsidian is open
+
 ### Remote Scheduled Agents (Anthropic cloud, no laptop needed)
-- **Morning Briefing**: `trig_01AEbxhpzxKWSHTBSDch389g` — weekdays 9am BST → Slack DM. Reads Gmail, Calendar, Slack, Notion tasks. Includes AI tool research via Reddit/X APIs.
-- **Meeting Note Importer**: `trig_01YU3rGDvyTg16JTpVDJ9LKk` — **DISABLED** (replaced by Railway service below)
+- **Morning Briefing**: `trig_01AEbxhpzxKWSHTBSDch389g` — weekdays 9am BST → Slack DM. Reads Gmail, Calendar, Slack, Notion tasks. Includes procrastination detection and smart prioritization.
+- **Meeting Note Importer**: `trig_01YU3rGDvyTg16JTpVDJ9LKk` — **ENABLED** — runs hourly 9am-5pm BST weekdays. Cross-references Google Calendar to skip in-progress meetings. Writes to GitHub, Obsidian Git plugin pulls automatically.
 - Manage at: https://claude.ai/code/scheduled
 
-### Meeting Note Importer (Railway service)
+### Meeting Note Importer (Railway service — code only, not deployed)
 - **Code**: `_System/meeting-importer/` (index.js, Dockerfile, railway.toml)
-- Polls Notion every 5 min (9am-5pm BST, weekdays) for new meeting notes
-- No Claude API needed — uses Notion's built-in AI summaries, injects [[wikilinks]]
-- Writes directly to `Meeting Notes/` in vault via GitHub API
-- Railway env vars needed: `NOTION_API_KEY`, `GITHUB_TOKEN`, `GITHUB_REPO=nikosummerst-ai/dailylog`
+- Not deployed — remote Claude trigger handles imports instead
+- Railway env vars if deployed: `NOTION_API_KEY`, `GITHUB_TOKEN`, `GITHUB_REPO=nikosummerst-ai/dailylog`
 - Optional: `SLACK_BOT_TOKEN` (for DM on import), `CRON_SCHEDULE`, `LOOKBACK_MINUTES`
 - Health check: `GET /health` on the Railway service URL
 
