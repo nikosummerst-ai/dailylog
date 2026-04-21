@@ -187,7 +187,10 @@ setInterval(() => {
 // Conversation persistence — survive Railway redeploys
 // ---------------------------------------------------------------------------
 
-const CONVERSATION_STATE_REL_PATH = "_System/personal-bot/state/conversations.json";
+// NOTE: This path is intentionally OUTSIDE _System/personal-bot/ — Railway
+// watches that directory and redeploys on every commit, which caused a
+// 409 crash loop when the bot persisted state after each conversation turn.
+const CONVERSATION_STATE_REL_PATH = "_System/bot-state/conversations.json";
 const CONVERSATION_STATE_LOCAL_PATH = path.join(__dirname, "state", "conversations.json");
 
 function serializeStore() {
