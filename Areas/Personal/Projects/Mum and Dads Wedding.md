@@ -12,7 +12,7 @@ Planning and preparation for Mum and Dad's upcoming wedding.
 
 ## Tasks
 - [x] ✍️ Write wedding speech (2–4 mins) ✅
-- [ ] Send speech to Mum & Dad once written
+- [x] Send speech to Mum & Dad once written ✅
 - [ ] Haircut — **Sat 8 May at 12pm** (day before wedding)
 - [ ] Wedding day — **Sat 9 May 2026**
 
