@@ -39,14 +39,14 @@ The wordmark is **TRIPTEASE** set in uppercase with generous letter-spacing. All
 
 ### Primary Brand Colors
 
-| Name | Hex | RGB | Usage |
-|------|-----|-----|-------|
-| **Copper** | `#ED6E2E` | 237, 110, 46 | Primary accent, CTAs, gradient start |
-| **Violet** | `#5E43C2` | 94, 67, 194 | Secondary accent, gradient end |
-| **Dark Text** | `#1B1B1B` | 27, 27, 27 | Primary body text |
-| **Dark Navy** | `#1B1E27` | 27, 30, 39 | Headers, dark backgrounds |
-| **White** | `#FFFFFF` | 255, 255, 255 | Card backgrounds, text on dark |
-| **Background Cream** | `#FDF9F6` | 253, 249, 246 | Page/document background |
+| Name                 | Hex       | RGB           | Usage                                |
+| -------------------- | --------- | ------------- | ------------------------------------ |
+| **Copper**           | `#ED6E2E` | 237, 110, 46  | Primary accent, CTAs, gradient start |
+| **Violet**           | `#5E43C2` | 94, 67, 194   | Secondary accent, gradient end       |
+| **Dark Text**        | `#1B1B1B` | 27, 27, 27    | Primary body text                    |
+| **Dark Navy**        | `#1B1E27` | 27, 30, 39    | Headers, dark backgrounds            |
+| **White**            | `#FFFFFF` | 255, 255, 255 | Card backgrounds, text on dark       |
+| **Background Cream** | `#FDF9F6` | 253, 249, 246 | Page/document background             |
 
 ### Neutral Greys
 

@@ -37,8 +37,12 @@ Autonomous search with 6-signal coverage.
 - [[Railway]] — hosting
 
 ## Related
+- [[About Triptease]]
+- [[AI at Triptease]] — wider AI strategy this sits inside
 - [[Brand Voice and Style Guide]]
 - [[Brand Guidelines - Visual]]
 - [[Product Reference]]
 - [[Guest Personas]]
+- [[OKRs and Strategic Priorities]] — KR2 alignment
+- [[Automation Stack]]
 - Assigned to Valentina, due April 17, 2026

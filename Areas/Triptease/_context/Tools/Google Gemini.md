@@ -9,18 +9,23 @@ created: 2026-04-16
 # Google Gemini
 
 ## What It Does
-Google's multimodal AI API — used for image and infographic generation.
+Google's multimodal AI — available as a consumer app, a developer API (via Google AI Studio), and integrated across Google Workspace (Docs, Sheets, Gmail, Slides).
 
 ## How We Use It
-- Infographic generation for hotel guest persona reports in [[Guest Personas]]
+- Consumer app (gemini.google.com) — general-purpose chat, research, long-context document analysis, Deep Research
+- Workspace integration — in-line AI in Docs/Sheets/Gmail via Google Workspace licence
+- API (AI Studio) — image and infographic generation in automation pipelines
 
 ## Access
-- Console: https://aistudio.google.com
+- Consumer app: https://gemini.google.com (Google SSO)
+- API console: https://aistudio.google.com
+- Workspace features: enabled per user via Google Workspace admin
 
 ## Used By
+- GTM / Niko — daily-driver AI assistant alongside [[Claude API]] and [[ChatGPT]]
 - [[Guest Personas]] — generates infographic images for persona reports (auto-approved, triggers PDF generation)
 
 ## Notes
-- Specifically chosen for image generation capabilities
-- Part of the Guest Personas pipeline step 8: generate infographic → auto-approve → spawn PDF
+- Strong at long-context tasks (1M+ token window) and Google Workspace integration
+- API specifically chosen for image generation in the Guest Personas pipeline (step 8)
 - Expect 3-5+ iterations for image generation tasks

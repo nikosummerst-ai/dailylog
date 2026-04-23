@@ -9,12 +9,33 @@ created: 2026-04-16
 
 Quick reference for all tools and software used across Triptease. See individual tool notes in [[Tools/]] for details.
 
+For the wider context: [[About Triptease]] · [[AI at Triptease]] · [[Org Structure]] · [[Automation Stack]].
+
+## Internal MCP Servers (Triptease-built)
+
+Proprietary MCPs that expose internal tooling to Claude. See [[AI at Triptease#Internal MCP Servers]].
+
+| MCP | Owning squad | What it exposes |
+|---|---|---|
+| Spotlight | [[Org Structure#Orca\|Orca]] | Hotel search, tag aggregation |
+| Budget MCP | [[Org Structure#Tamarin\|Tamarin]] | Budgets, daily/monthly budgets |
+| Parity | [[Org Structure#Rockhopper\|Rockhopper]] | Parity monitoring |
+| Retargeting MCP | [[Org Structure#Tamarin\|Tamarin]] | Retargeting campaigns |
+| Price Feed | [[Org Structure#Rockhopper\|Rockhopper]] | Price feed data |
+| Rockhopper Hotel Config | [[Org Structure#Rockhopper\|Rockhopper]] | Hotel config |
+| Rockhopper Debug Tools | [[Org Structure#Rockhopper\|Rockhopper]] | Debug |
+| Triptease Design System | [[Org Structure#Launchpad\|Launchpad]] | Components, CSS tokens, setup |
+
 ## AI
 | Tool | Used By | Purpose |
 |------|---------|---------|
 | [[Claude API]] | Guest Personas, DBD, Help Centre, ABM, Hub, Studio | LLM — scoring, generation, analysis |
 | [[OpenAI API]] | Personal Bot | Whisper speech-to-text |
-| [[Google Gemini]] | Guest Personas | Infographic image generation |
+| [[Google Gemini]] | Guest Personas, GTM | Consumer app + API (image generation) |
+| [[ChatGPT]] | GTM | Consumer AI assistant — chat, research, Deep Research |
+| [[Perplexity]] | GTM | AI answer engine with cited web search |
+| [[Manus]] | GTM | Autonomous AI agent — multi-step research and tasks |
+| [[Google Stitch]] | GTM | AI UI design + front-end code generation |
 
 ## Infrastructure & Security
 | Tool | Used By | Purpose |
@@ -107,3 +128,5 @@ Quick reference for all tools and software used across Triptease. See individual
 | [[Axe DevTools]] | Engineering | Accessibility testing |
 | [[Replit]] | GTM | AI vibe coding |
 | [[Bolt]] | GTM | AI app building |
+| [[Lovable]] | GTM | AI full-stack app builder (React + Supabase) |
+| [[Cursor]] | GTM, Niko | AI-first code editor for local development |

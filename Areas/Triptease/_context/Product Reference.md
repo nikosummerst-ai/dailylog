@@ -295,9 +295,18 @@ Triptease delivers the most value for properties with:
 
 ## Related
 
+- [[About Triptease]] — company overview, mission, values
+- [[Leadership]] — exec team and senior leaders
+- [[Org Structure]] — squads (Rockhopper, Dragonfly, Tamarin, etc.) that build these products
+- [[OKRs and Strategic Priorities]] — current focus
+- [[AI at Triptease]] — AI strategy, MCPs, internal tooling
+- [[Direct Booking Summit]] — flagship owned event
+- [[Glossary - Triptease]] — internal slang
+- [[Hospitality Glossary]] — industry terms
+- [[Slack Channels]] — channel directory
 - [[Brand Voice and Style Guide]]
 - [[Brand Guidelines - Visual]]
 - [[Triptease Studio]]
 - [[Guest Personas]]
 - [[ABM Creator]]
-- [[About Triptease]]
+- [[Tools Index]]
