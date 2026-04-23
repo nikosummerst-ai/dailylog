@@ -22,4 +22,6 @@ Keep entries terse — the company/tool + release tag is the dedupe key. Normali
 
 <!-- Trigger appends below this line. Do not delete the marker. -->
 <!-- BANK-ENTRIES-START -->
+- 2026-04-23 | OpenAI | ChatGPT for Clinicians launch
+- 2026-04-23 | Beehiiv | Creator tools webinars paywalls launch
 <!-- BANK-ENTRIES-END -->
