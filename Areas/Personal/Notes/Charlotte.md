@@ -6,14 +6,14 @@ created: 2026-04-15
 # Charlotte (Meep)
 
 ## About
-Niko's partner. Currently living with Niko at his mum and dad's. Previously lived alone for a long time — lost a rental when she and her ex split up. Wants her own independent space badly. They're looking to rent short-term while also searching for a property to buy (see [[House Checker]]). Many house searches have fallen through — it's been stressful.
+[[About Me|Niko]]'s partner. Currently living with Niko at his mum and dad's. Previously lived alone for a long time — lost a rental when she and her ex split up. Wants her own independent space badly. They're looking to rent short-term while also searching for a property to buy (see [[House Checker]]). Many house searches have fallen through — it's been stressful.
 
 Works as a **copywriter** in Wigan — long commute, not happy with it, wants to change jobs. She's the eldest of her siblings — has two younger sisters and a younger brother ([[Christopher]]).
 
 Niko and Charlotte have a shared thing with **capybaras** — it's their symbol for love. 🐾
 
 ## Important Dates
-- 🎂 Birthday: 1st April
+- 🎂 Birthday: 1st April — see [[Birthday Itinerary]]
 
 ## Gift History
 - 2026-04: Niko bought [[Charlotte]] Crocs (cream pair) for her birthday — wrong colour/size, being returned. Reordering cream pair (correct). Need to send current pair back.
