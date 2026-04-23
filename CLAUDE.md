@@ -88,6 +88,7 @@ These are the single source of truth. When something changes, update the file in
 - **AI Releases – Real Time**: `trig_01PCu1hLcSMAu8T7mQwbMTU7` — 4× daily at 8/12/16/20 UTC (9am/1pm/5pm/9pm BST), every day. Scans X + web for new releases in the last 4h. Posts `🚀 Fresh AI & Tool Releases` Slack DM only if something new; exits silently otherwise.
 - **Meeting Note Importer**: `trig_01YU3rGDvyTg16JTpVDJ9LKk` — **ENABLED** — runs hourly 9am-5pm BST weekdays. Checks Google Calendar attendance (only imports meetings Niko attended). Strips Notion `@Today HH-MM (BST)` suffix from titles. Strong filename sanitisation prevents `\n`-suffix duplicates.
 - Manage at: https://claude.ai/code/scheduled
+- **To update a trigger prompt**: use the `schedule` skill (Skill tool) — it loads the RemoteTrigger tool automatically. Never claim you can't update triggers; you can.
 
 ### Meeting Note Importer (Railway service — code only, not deployed)
 - **Code**: `_System/meeting-importer/` (index.js, Dockerfile, railway.toml)
