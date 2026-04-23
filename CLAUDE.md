@@ -63,6 +63,8 @@ These are the single source of truth. When something changes, update the file in
 - Runs in **cloud mode** (writes to vault via GitHub API, not local filesystem)
 - Railway env vars needed: `TELEGRAM_BOT_TOKEN`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `TELEGRAM_USER_ID`, `GITHUB_TOKEN`, `GITHUB_REPO=nikosummerst-ai/dailylog`
 - Auto-deploys when you push to `main`
+- **⚠️ State file**: `_System/bot-state/conversations.json` (NOT `_System/personal-bot/state/`). State was moved outside Railway's watched root directory because every state-write commit was triggering a redeploy → 409 crash loop. Do NOT move it back inside `_System/personal-bot/`.
+- **⚠️ `[skip deploy]`** in commit messages does NOT prevent Railway redeploys — Railway ignores this tag.
 
 ### To deploy changes to the bot:
 1. Edit `_System/personal-bot/bot.js`
@@ -82,8 +84,9 @@ These are the single source of truth. When something changes, update the file in
 - No manual `git pull` needed while Obsidian is open
 
 ### Remote Scheduled Agents (Anthropic cloud, no laptop needed)
-- **Morning Briefing**: `trig_01AEbxhpzxKWSHTBSDch389g` — weekdays 9am BST → Slack DM. Reads Gmail, Calendar, Slack, Notion tasks. Includes procrastination detection and smart prioritization.
-- **Meeting Note Importer**: `trig_01YU3rGDvyTg16JTpVDJ9LKk` — **ENABLED** — runs hourly 9am-5pm BST weekdays. Cross-references Google Calendar to skip in-progress meetings. Writes to GitHub, Obsidian Git plugin pulls automatically.
+- **Morning Briefing**: `trig_01AEbxhpzxKWSHTBSDch389g` — **every day** 8am UTC (9am BST) → Slack DM. Reads Gmail, Calendar, Slack, Notion tasks. AI & Tool Releases section covers ~100 tools (all major AI labs, vibe-coding IDEs, design, marketing/SaaS). Max 6 release bullets per briefing.
+- **AI Releases – Real Time**: `trig_01PCu1hLcSMAu8T7mQwbMTU7` — 4× daily at 8/12/16/20 UTC (9am/1pm/5pm/9pm BST), every day. Scans X + web for new releases in the last 4h. Posts `🚀 Fresh AI & Tool Releases` Slack DM only if something new; exits silently otherwise.
+- **Meeting Note Importer**: `trig_01YU3rGDvyTg16JTpVDJ9LKk` — **ENABLED** — runs hourly 9am-5pm BST weekdays. Checks Google Calendar attendance (only imports meetings Niko attended). Strips Notion `@Today HH-MM (BST)` suffix from titles. Strong filename sanitisation prevents `\n`-suffix duplicates.
 - Manage at: https://claude.ai/code/scheduled
 
 ### Meeting Note Importer (Railway service — code only, not deployed)
