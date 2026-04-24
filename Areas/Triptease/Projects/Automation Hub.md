@@ -37,6 +37,10 @@ Next.js 16, App Router, TypeScript, Tailwind v4, Auth.js v5, Prisma, PostgreSQL,
 - **Google Sheets via service account** in Shared Drive — personal Drive quota = 0 for service accounts. Must use `supportsAllDrives: true` on all Drive API calls.
 - **Prisma schema managed via `db push`** — not migrate; `_prisma_migrations` not maintained.
 - **Rep validation via dashboard** — personas selected in-app (8 of 15); no Slack for selection. One DM per batch completion.
+- **Events UI shows children, not parents** (Apr 2026) — bulk-upload parents have no googlePlacesId; filter `r.googlePlacesId !== null` so each hotel in a CSV upload shows as its own row.
+- **Cached candidates reuse** (Apr 2026) — on add/bulk, if a prior run exists with candidates for the same placeId, skip GP backend and set status=AWAITING_SELECTION directly with cached top-15.
+- **Stale threshold 4h** (was 30 min) — events pipeline + manual selection can easily exceed 30 min; raised to avoid false stale badges.
+- **Admins can act on any run** — `resolveRun`, `retryRun`, `upgradeToFull` now check `isAdmin || triggeredById === session.user.id`.
 
 ## Key Links
 - Code: ~/Desktop/ClaudeProjects/Ticket System
@@ -50,6 +54,15 @@ Next.js 16, App Router, TypeScript, Tailwind v4, Auth.js v5, Prisma, PostgreSQL,
 - CLAUDE.md: ~/Desktop/ClaudeProjects/Ticket System/CLAUDE.md
 
 ## Recent Work
+
+### 2026-04-24 (session 2)
+- Fixed 3 production bugs: events bulk 401 (wrong auth header), Mark Done/Failed "Not authorized" (admin now allowed), stale runs every 30 min (threshold raised to 4h)
+- Added delete event list (admin/creator only, cascades all runs)
+- Fixed events bulk display: each CSV hotel now its own row; bulk-parent placeholder hidden
+- Hotel names normalised everywhere (strip address, handle raw place IDs) via new `displayHotelName()` helper
+- Added cached top-15 candidate reuse: hotels seen before jump straight to Awaiting Selection, skip GP backend
+- GP backend: events-mode bulk no longer sends "Starting batch" or "Batch complete" Slack DMs
+- Next: confirm DBS Summit 2026 list re-upload works end-to-end after all fixes; handoff to Megan for rep workflow
 
 ### 2026-04-21 to 2026-04-24
 - Built and shipped full Events tab: list CRUD, hotel run form (single/build/CSV), persona selection modal (8 of 15), Google Sheets integration, CSV download with all copy, Slack notifications, GP backend events mode + /finalize
