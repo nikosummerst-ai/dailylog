@@ -26,4 +26,6 @@ Keep entries terse — the company/tool + release tag is the dedupe key. Normali
 - 2026-04-23 | Beehiiv | Creator tools webinars paywalls launch
 - 2026-04-23 | OpenAI | GPT-5.5 launch
 - 2026-04-24 | DeepSeek | V4-Pro & V4-Flash preview launch
+- 2026-04-24 | OpenAI | Workspace Agents in ChatGPT launch
+- 2026-04-24 | Tencent | Hy3 Preview launch
 <!-- BANK-ENTRIES-END -->
